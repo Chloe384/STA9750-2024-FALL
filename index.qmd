@@ -1,0 +1,10 @@
+---
+title: "Chloe's Personal Website"
+---
+Welcome!!
+
+Hi everyone. My name is Chloe Yu.
+
+I am a recent graduate from the Zicklin School of Business at Baruch College a few months ago with a BBA in Finance. Currently, I am enrolled in Baruch College's graduate program. I majored in MS in Business Analytics with a concentration in data analytics. Currently, I have a full time job as an medical assistant at a dental clinic. In my free time, I like to listen to music. I also like to cook food. It helps me feel relaxed and gives me a little break from whatever I'm doing that day. 
+
+I have no prior experience with coding and this is my first time taking a course that involves coding. I believe it will be tough for me to learn all the functions of software required for this course but I hope by the end of the semester, I learn the basics and fundamentals of R and RStudio. 
