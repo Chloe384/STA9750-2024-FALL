@@ -154,6 +154,7 @@ USAGE <- USAGE |>
 
 if(!require("DT")) install.packages("DT")
 library(DT)
+library(gt)
 
 sample_n(USAGE, 1000) |> 
   select(-`NTD ID`, -`3 Mode`) |>
@@ -174,6 +175,9 @@ most_vrm_agency <- USAGE |>
   arrange(desc(total_vrm)) |>
   slice(1)
 
+most_vrm_agency |>
+  gt() |>
+  tab_header(title = "Most Total VRM Agency")
 ```
 
 2. What transit mode had the most total VRM in this sample?
@@ -186,7 +190,9 @@ most_vrm_mode <- USAGE |>
   summarize(total_vrm = sum(VRM, na.rm = TRUE)) |>
   arrange(desc(total_vrm)) |>
   slice(1)
-print(most_vrm_mode)
+most_vrm_mode |>
+  gt() |>
+  tab_header(title = "Most Total VRM Mode")
 ```
 
 3. How many trips were taken on the NYC Subway (Heavy Rail) in May 2024?
@@ -200,7 +206,10 @@ nyc_subway_trips_may_2024 <- USAGE |>
          Agency == "MTA New York City Transit", 
          month == "2024-05") |>
   summarize(total_trips = sum(UPT, na.rm = TRUE))  
-print(nyc_subway_trips_may_2024)
+nyc_subway_trips_may_2024 |>
+  gt() |>
+  tab_header(title = "NYC Subway (Heavy Rail) in May 2024")
+
 ```
 
 5. How much did NYC subway ridership fall between April 2019 and April 2020?
@@ -213,56 +222,57 @@ nyc_subway_ridership_april_2019_to_april_2020 <- USAGE |>
     April_2019 = sum(case_when(month == "2019-04" ~ UPT, TRUE ~ 0), na.rm = TRUE),
     April_2020 = sum(case_when(month == "2020-04" ~ UPT, TRUE ~ 0), na.rm = TRUE), percent_change = (April_2020 - April_2019)/April_2019) |>
   ungroup()
-print(nyc_subway_ridership_april_2019_to_april_2020)
-```
 
-
-
-```{r}
-if (!require("formattable")) install.packages("formattable")
-library(formattable)
-if (!require("gt")) install.packages("gt")
-library(gt)
-
-USAGE |>
-  filter(Agency == "MTA New York City Transit" & Mode == "Heavy Rail") |>
-  summarise(
-    April19_Trips = sum(dplyr::case_when(month == "2019-04-01" ~ UPT, TRUE ~ 0), na.rm = TRUE),
-    April20_Trips = sum(dplyr::case_when(month == "2020-04-01" ~ UPT, TRUE ~ 0), na.rm = TRUE),
-    Pct_Change = (April20_Trips - April19_Trips) / April19_Trips
-  ) |>
-  ungroup() |>
-  mutate(
-    Pct_Change = scales::percent(Pct_Change),
-    April19_Trips = comma(April19_Trips, digits = 0),
-    April20_Trips = comma(April20_Trips, digits = 0)
-  ) 
+nyc_subway_ridership_april_2019_to_april_2020 |>
+  gt() |>
+  tab_header(title = "% Change in NYC Subway Ridership")
 ```
 
 ## Task 4: Explore and Analyze
 
 ### Monthly ridership trends
+I wanted to explore the monthly ridership trends of the public tansfit systems.
 
 Analyzing monthly ridership data helps identify patterns in transit usage. This information can be used to optimize service schedules. For example, during peak months (summer vacations of holiday seasons), the transit system should consider increase the service frequency to avoid overcrowded train cars. The transit system could also possibly utilize the off-peak months for service adjustments. 
 
 ```{r}
+library(dplyr)
+library(lubridate)
 monthly_ridership_change <- USAGE |>
+  mutate(month = format(ymd(month), "%Y-%m")) |>
   group_by(month) |>
-  summarize(total_upt = sum(UPT, na.rm = TRUE)) |>
-  arrange(month)
-print(monthly_ridership_change)
+  summarize(total_upt = sum(UPT, na.rm = TRUE), .groups = 'drop') |>
+  arrange(month) |>
+  mutate(percent_change = (total_upt - lag(total_upt)) / lag(total_upt) * 100)
+# take the top 5 months that shows the greatest percent change
+
+top_5_months <- monthly_ridership_change |>
+  filter(!is.na(percent_change)) |>
+  arrange(desc(percent_change)) |>
+  slice_head(n = 5) 
+
+top_5_months |>
+  gt() |>
+  tab_header(title = "Top 5 Months with Gratest Percent Change in Ridership")
+
 ```
+
+
 ### Efficency performance
 
 Analyze the transit mode performance indicates how well each transit mode is utilizing their vehicle miles per passenger ridership.
 
 ```{r}
-performance_by_mode <- USAGE |>
+UPT_per_VRM <- USAGE |>
   group_by(Mode) |>
   summarize(total_upt = sum(UPT, na.rm = TRUE), total_vrm = sum(VRM, na.rm = TRUE)) |>
-  mutate(performance_by_mode = total_upt/total_vrm) |>
-  arrange(desc(performance_by_mode))
-print(performance_by_mode)
+  mutate(UPT_per_VRM = total_upt/total_vrm) |>
+  arrange(desc(UPT_per_VRM))
+
+UPT_per_VRM |>
+  gt() |>
+  tab_header(title = "UPT_per_VRM Ratio")
+
 ```
 ### Top performance agencies 
 
@@ -347,7 +357,7 @@ print(lowest_expenses_per_upt)
 
 4. Which transit system (agency and mode) has the highest total fares per UPT?
 
-In 2022, commuter bus under agency Hampton Jitney Inc has the highest fares per UPT of $41.30. 
+In 2022, commuter bus under agency Hampton Jitney Inc has the highest fares per UPT of $41.30.
 
 ```{r}
 highest_fares_per_upt <- USAGE_AND_FINANCIALS |>
@@ -381,13 +391,4 @@ highest_fares_per_vrm <- USAGE_AND_FINANCIALS |>
 print(highest_fares_per_vrm)
 ```
 
-```{r}
-farebox_recovery <- USAGE_AND_FINANCIALS |>
-  group_by(Mode) |>
-  mutate(farebox_recovery = `Total Fares`/Expenses) |>
-  arrange(desc(farebox_recovery))
-```
-
 ## Conclusion
-
-The efficiency of major public transit system can be defined in different ways. For the purpose of this report, we will focus on 
