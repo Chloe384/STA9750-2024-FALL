@@ -1,21 +1,21 @@
-# Mini project 01: Fiscal Characteristics of Major US Public Transit System
+# Mini Project 01: Fiscal Characteristics of Major US Public Transit System
 
 ## Introduction
 
-Public transit systems plays an important role in providing the essential transportation service for millions of residents in the United States. It serves over millions of people on a daily basis. Other forms of transit system include buses, trains, and commuter trains. In this project, we are looking to analyze the fiscal characteristics of public transit systems to evaluate their financial performance. 
+Public transit systems plays an important role in providing the essential transportation service for millions of residents in the United States. In this project, we are looking to analyze the fiscal characteristics of public transit systems to evaluate their financial performance. 
 
 ## Fiscal Characteristics:
 We are going to analyze public transit systems based on the following:
 
-1. Operating expenses: costs to operate (fuel, maintenance, employee salaries, etc)
+1. **Expenses:** costs to operate (fuel, maintenance, employee salaries, etc)
 
-2. Fare revenue: money earned from passenger fares
+2. **Fare revenue:** money earned from passenger fares
 
-3. Farebox recovery ratio: how much of the operating expense is covered by the fares revenue (total farewell revenue/total operating expense)
+3. **Farebox recovery ratio:** how much of the operating expense is covered by the fares revenue (total farewell revenue/total operating expense)
 
-## Importance of fiscal data analysis
+4. **UPT:** Unlinked Passenger Trips
 
-By analyzing the fiscal data of public transit system, we can understand their financial performance. This will allow federal and/or state government make effective strategic planning regarding service improvement, budget funding, and stability. 
+5. **VRM:** Vehicle Revenue Miles
 
 ## Data source:
 
@@ -129,7 +129,7 @@ USAGE <- inner_join(TRIPS, MILES) |>
 unique_modes <- USAGE |> 
     distinct(Mode)
 
-# Rename codes 
+# Step 2: Rename codes 
 USAGE <- USAGE |>
   mutate(Mode=case_when( 
     Mode == "HR" ~ "Heavy Rail", 
@@ -158,36 +158,41 @@ library(gt)
 
 sample_n(USAGE, 1000) |> 
   select(-`NTD ID`, -`3 Mode`) |>
-  mutate(month=as.character(month)) |> 
+  rename(Unlinked_Passenge_Ttrips = UPT, Vehicle_Revenue_Miles = VRM) |>
+  mutate(month=as.character(month)) |>
   DT::datatable()  #visualize a sample of 1000 observations
 ```
 
-## Task 3: Using `dplyr` to analyze transit agencies
+Note: In this sample, I unselected columns "NTD ID" and "3 Mode" and renamed "UPT" and "VRM" to make the table look cleaner and easier to interpret.
 
-1. What transit agency had the most total VRM in this sample?
+## Task 3: Using `dplyr` to Analyze Transit Agencies
 
-The MTA New York transit has the most vehicle mileage. It has a total of 10,832,855,350 mileage. This is not a surprise since the MTA is the largest metro system in the United States.
+**1. What transit agency had the most total VRM in this sample?**
+
+The MTA New York transit has the most vehicle mileage. It has operated over 10.8 billion (almost 11 billion) mileage.
 
 ``` {r}
 most_vrm_agency <- USAGE |>
   group_by(Agency) |>
   summarize(total_vrm = sum(VRM, na.rm = TRUE)) |>
+  ungroup() |>
   arrange(desc(total_vrm)) |>
-  slice(1)
+  slice(1) 
 
 most_vrm_agency |>
   gt() |>
   tab_header(title = "Most Total VRM Agency")
 ```
 
-2. What transit mode had the most total VRM in this sample?
+**2. What transit mode had the most total VRM in this sample?**
 
-Bus has the most total VRM of 49,444,494,088 mileage. 
+Bus has the most total VRM of over 49 billion mileage. 
 
 ```{r}
 most_vrm_mode <- USAGE |>
   group_by(Mode) |>
   summarize(total_vrm = sum(VRM, na.rm = TRUE)) |>
+  ungroup() |>
   arrange(desc(total_vrm)) |>
   slice(1)
 most_vrm_mode |>
@@ -195,7 +200,7 @@ most_vrm_mode |>
   tab_header(title = "Most Total VRM Mode")
 ```
 
-3. How many trips were taken on the NYC Subway (Heavy Rail) in May 2024?
+**3. How many trips were taken on the NYC Subway (Heavy Rail) in May 2024?**
 
 In May 2024, a total of 180,458,819 trips were taken on the NYC Subway (Heavy Rail). 
 
@@ -205,14 +210,16 @@ nyc_subway_trips_may_2024 <- USAGE |>
   filter(Mode == "Heavy Rail",
          Agency == "MTA New York City Transit", 
          month == "2024-05") |>
-  summarize(total_trips = sum(UPT, na.rm = TRUE))  
+  summarize(total_trips = sum(UPT, na.rm = TRUE)) 
 nyc_subway_trips_may_2024 |>
   gt() |>
   tab_header(title = "NYC Subway (Heavy Rail) in May 2024")
 
 ```
 
-5. How much did NYC subway ridership fall between April 2019 and April 2020?
+**5. How much did NYC subway ridership fall between April 2019 and April 2020?**
+
+Between April 2019 and April 2020, NYC Subway ridership fall about 91.28%. 
 
 ```{r}
 nyc_subway_ridership_april_2019_to_april_2020 <- USAGE |>
@@ -220,7 +227,7 @@ nyc_subway_ridership_april_2019_to_april_2020 <- USAGE |>
   filter(Agency == "MTA New York City Transit", Mode == "Heavy Rail", month %in% c("2019-04", "2020-04")) |>
    summarise(
     April_2019 = sum(case_when(month == "2019-04" ~ UPT, TRUE ~ 0), na.rm = TRUE),
-    April_2020 = sum(case_when(month == "2020-04" ~ UPT, TRUE ~ 0), na.rm = TRUE), percent_change = (April_2020 - April_2019)/April_2019) |>
+    April_2020 = sum(case_when(month == "2020-04" ~ UPT, TRUE ~ 0), na.rm = TRUE), percent_change = (April_2020 - April_2019)/April_2019 *100) |>
   ungroup()
 
 nyc_subway_ridership_april_2019_to_april_2020 |>
@@ -230,10 +237,9 @@ nyc_subway_ridership_april_2019_to_april_2020 |>
 
 ## Task 4: Explore and Analyze
 
-### Monthly ridership trends
-I wanted to explore the monthly ridership trends of the public tansfit systems.
+### Monthly Ridership Trends
 
-Analyzing monthly ridership data helps identify patterns in transit usage. This information can be used to optimize service schedules. For example, during peak months (summer vacations of holiday seasons), the transit system should consider increase the service frequency to avoid overcrowded train cars. The transit system could also possibly utilize the off-peak months for service adjustments. 
+I wanted to explore the monthly ridership trends of the public transit systems. Using the code below, I made a table that lists the top 5 months with the greatest percent change in monthly ridership. 
 
 ```{r}
 library(dplyr)
@@ -253,14 +259,20 @@ top_5_months <- monthly_ridership_change |>
 
 top_5_months |>
   gt() |>
-  tab_header(title = "Top 5 Months with Gratest Percent Change in Ridership")
+  tab_header(title = "Top 5 Months with Greatest Percent Change in Ridership")
 
 ```
 
+**Findings:**
 
-### Efficency performance
+1. **2020-06 (29.76% Increase)** and **2020-07 (20.04% Increase)**: Due to quarantine requirements in early 2020, public transit usage has rapidly declined. In June 2020, as the restrictions loosened, and hence we see rebound in passenger usage of public transit with approximately 30% increase in usage. Passenger usage continue to grow a 20% increase in July 2020. Also, this growth can reflect seasonal factors since July is one of the peak seasons for summer vacation. People are regular to their regular routine and planning for vacations. 
 
-Analyze the transit mode performance indicates how well each transit mode is utilizing their vehicle miles per passenger ridership.
+2. **2021-03 (27.34% Increase)** and **2022-03 (20.37% Increase)**: These period reflects the ongoing recovery of the COVID-19 pandemic. Reopening of business, end of remote working modes, loosen of public health safety measures encourage more rider usage of public transit. Hence, we see a relatively big increase in ridership usage. 
+
+
+### Unlinked Passenger Trips per Vehicle Revenue Miles
+
+I also wanted to explore the ratio of unlinked passenger trips per vehicle revenue miles to evaluate the efficiency of transit systems. Using the code below, I categorized and ranked 18 transit modes by the UPT per VRM ratio. The UPT per VRM evaluates how many passenger trips is generated per vehicle mile. 
 
 ```{r}
 UPT_per_VRM <- USAGE |>
@@ -271,20 +283,47 @@ UPT_per_VRM <- USAGE |>
 
 UPT_per_VRM |>
   gt() |>
-  tab_header(title = "UPT_per_VRM Ratio")
+  tab_header(title = "Unlinked Passenger Trips per Vehicle Revenue Mile")
 
 ```
-### Top performance agencies 
+
+**Findings:**
+
+1. **High Efficiency Modes:** 
+
+        - Aerial Tramway
+        - Inclined Planes
+    
+2. **Moderate Efficiency Modes:**
+
+        - Ferry Boats
+        - Cable Cars
+    
+3. **Lower Efficiency Modes: **
+
+        - Demand Response
+        - Bus
+        - Commuter Bus
+
+### Highest VRM Mode for Each Agency
+
+Agencies have different transit modes. I want to analyze which transit mode has the highest UPT for each agency. For example, King County has transit modes of ferry boats, bus, demand response, etc. I want to explore which transit modes in King County generates the highest VRM. Using the code below, I generated the top 3 highest VRM transit mode for each agency. 
 
 ```{r}
-agency_performance <- USAGE |>
-    group_by(Agency) |>
-    summarize(total_UPT = sum(UPT, na.rm = TRUE), total_VRM = sum(VRM, na.rm = TRUE)) |>
-    mutate(agency_performance = total_UPT/total_VRM) |>
-    arrange(desc(agency_performance)) |>
-  slice(1)
-print(agency_performance)
+top_3_highest_vrm_mode_per_agency <- USAGE |>
+  group_by(Agency,Mode) |>
+  summarize(total_vrm = sum(VRM, na.rm = TRUE), .groups = 'drop') |>
+  arrange(desc(total_vrm)) |>
+  slice_head(n=3)
+
+top_3_highest_vrm_mode_per_agency |>
+  gt() |>
+  tab_header(title = "Highest VRM Mode for Each Agency") |>
+  cols_label(total_vrm = "Total Vehicle Revenue Miles")
 ```
+**Findings:**
+
+The highest transit mode for MTA New York City Transit agency is heavy rail. It generates 7,732,916,753 miles. Recall in question 1 of Task 3, MTA New York City Transit has a total of 10,832,855,350 miles in total. If we calculate the percentage of total VRM operated by heavy rail, we get 71.4%. Heavy rails operates a big portion of the vehicle miles travelled by MTA.
 
 ## Task 5: 2022 Annual Summary Table
 
@@ -302,7 +341,7 @@ USAGE_2022_ANNUAL <- USAGE |>
 
 ```
 
-Note: Since we are restricting ours answers to major transit system, I have filtered total UPT to be greater than 400,000 (shown in code above). 
+Note: Since we are restricting our answers to major transit system, I have filtered total UPT to be greater than 400,000 (shown in code above). 
 
 ### Merging 2022 Summary Table with Financial Data Table
 
@@ -317,32 +356,40 @@ USAGE_AND_FINANCIALS <- left_join(USAGE_2022_ANNUAL,
 
 ## Task 6: Farebox Recovery Among Major Systems
 
-1. Which transit system (agency and mode) had the most UPT in 2022?
+**Note:** For Task 6 questions, the output table will show the top 5 results.
 
-In 2022, the MTA New York City Transit heavy rails has the great number of passenger trips. It has over 1.7 billion trips. 
+**1. Which transit system (agency and mode) had the most UPT in 2022?**
+
+In 2022, the MTA New York City Transit heavy rail has the great number of passenger trips. It has over 1.7 billion trips. 
 
 ```{r}
 most_total_upt <- USAGE_AND_FINANCIALS |>
   filter(total_upt >= 400000) |>
   arrange(desc(total_upt)) |>
-  slice (1) |>
-  select(Agency, `Agency Name`, Mode, total_upt)
-print(most_total_upt)
+  slice_head(n=5) |>
+  select(Agency, Mode, total_upt)
+most_total_upt |>
+  gt() |>
+  tab_header(title = "Transit System with the Most UPT in 2022")
+
 ```
 
-2. Which transit system (agency and mode) had the highest farebox recovery, defined as the highest ratio of Total Fares to Expenses?
- In 2022, Port Imperial Ferry Corporation ferry boat has the highest farebox recovery ratio of 1.428. 
+**2. Which transit system (agency and mode) had the highest farebox recovery, defined as the highest ratio of Total Fares to Expenses?**
+
+In 2022, Port Imperial Ferry Corporation ferry boat has the highest farebox recovery ratio of 1.428. 
 
 ```{r}
 highest_farebox_recovery <- USAGE_AND_FINANCIALS |>
   mutate(farebox_recovery = `Total Fares`/Expenses) |>
-  select(`NTD ID`, Agency, Mode, farebox_recovery) |>
+  select(`NTD ID`, Agency, Mode, `Total Fares`, Expenses, farebox_recovery) |>
   arrange(desc(farebox_recovery)) |>
-  slice(1) 
-print(highest_farebox_recovery)
+  slice_head(n=5) 
+highest_farebox_recovery |>
+  gt() |>
+  tab_header(title = "Transit System with the Highest Farebox Recovery")
 ```
 
-3. Which transit system (agency and mode) has the lowest expenses per UPT?
+**3. Which transit system (agency and mode) has the lowest expenses per UPT?**
 
 In 2022, North Carolina State University Bus has the lowest expense per UPT of $1.18. 
 
@@ -350,12 +397,14 @@ In 2022, North Carolina State University Bus has the lowest expense per UPT of $
 lowest_expenses_per_upt <- USAGE_AND_FINANCIALS |>
   mutate(expenses_per_upt = Expenses/total_upt) |>
   arrange(expenses_per_upt) |>
-  slice_min(expenses_per_upt) |>
-  select(Agency, Mode, expenses_per_upt)
-print(lowest_expenses_per_upt)
+  slice_head(n=5)
+lowest_expenses_per_upt |>
+  gt() |>
+  tab_header(title = "Transit System with the Lowest Expenses per UPT")
+
 ```
 
-4. Which transit system (agency and mode) has the highest total fares per UPT?
+**4. Which transit system (agency and mode) has the highest total fares per UPT?**
 
 In 2022, commuter bus under agency Hampton Jitney Inc has the highest fares per UPT of $41.30.
 
@@ -363,32 +412,55 @@ In 2022, commuter bus under agency Hampton Jitney Inc has the highest fares per 
 highest_fares_per_upt <- USAGE_AND_FINANCIALS |>
   mutate(fares_per_upt = `Total Fares`/total_upt) |>
   arrange (desc(fares_per_upt)) |>
-  slice(1) 
-print(highest_fares_per_upt)
+  slice_head(n=5) 
+highest_fares_per_upt |>
+  gt() |>
+  tab_header(title = "Transit System with the Highest Total Fares per UPT")
+
 ```
 
-5. Which transit system (agency and mode) has the lowest expenses per VRM?
+**5. Which transit system (agency and mode) has the lowest expenses per VRM?**
 
 In 2022, Metropolitan Transportation Commission vanpool has the lowest expense per VRM of $0.45. 
 
 ```{r}
 lowest_expenses_per_vrm <- USAGE_AND_FINANCIALS |>
   mutate(expenses_per_vrm = Expenses/total_vrm) |>
+  select(-`NTD ID`,
+         -metro_area, 
+         -`Agency Name`) |>
   arrange(expenses_per_vrm) |>
-  slice(1)
-print(lowest_expenses_per_vrm)
+  slice_head(n=5)
+lowest_expenses_per_vrm |>
+  gt() |>
+  tab_header(title = "Transit System with the Lowest Expenses per VRM")
+
 ```
 
-6. Which transit system (agency and mode) has the highest total fares per VRM?
+**6. Which transit system (agency and mode) has the highest total fares per VRM?**
 
 In 2022, Jacksonville Transportation Authority ferryboat has the highest total fares per VRM of $157.70. 
 
 ```{r}
 highest_fares_per_vrm <- USAGE_AND_FINANCIALS |>
   mutate(fares_per_vrm = `Total Fares`/total_vrm) |>
+  select(-`NTD ID`,
+         -metro_area,
+         -`Agency Name`) |>
   arrange(desc(fares_per_vrm)) |>
-  slice(1)
-print(highest_fares_per_vrm)
+  slice_head(n=5)
+highest_fares_per_vrm |>
+  gt() |>
+  tab_header(title = "Transit System with the Highest Total Fares per VRM")
 ```
 
 ## Conclusion
+
+The metrics to analyze the most efficient transit system can be measured in different ways. 
+
+Looking at the **farebox recovery ratio**, Port Imperial Ferry Corporation ferry boat would be the top candidate as it can shows a strong ratio of 1.428 (refer back to Task 6 question 2). This shows that Port Imperial Ferry Corporation ferry boat has strong profitability and has a healthy financial performance. 
+
+If we measure efficiency from **vehicle miles**,  MTA New York City Transit Heavy Rail would be the most efficient transit system. It has the highest vehicle miles travelled (refer to question 1 of Task 3). It provides extensive amount of service indicating high ridership demand. Its vehicles are well utilized and therefore operating efficiently.
+
+
+
