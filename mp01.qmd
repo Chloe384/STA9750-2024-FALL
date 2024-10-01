@@ -152,7 +152,9 @@ USAGE <- USAGE |>
     Mode == "PB" ~ "Publico",
     Mode == "CC" ~ "Cable Car",
     TRUE ~ "Unknown"))  
+```
 
+```{r}
 if(!require("DT")) install.packages("DT")
 library(DT)
 library(gt)
