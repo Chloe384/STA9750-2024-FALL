@@ -5,6 +5,7 @@
 Public transit systems plays an important role in providing the essential transportation service for millions of residents in the United States. In this project, we are looking to analyze the fiscal characteristics of public transit systems to evaluate their financial performance. 
 
 ## Fiscal Characteristics:
+
 We are going to analyze public transit systems based on the following:
 
 1. **Expenses:** costs to operate (fuel, maintenance, employee salaries, etc)
@@ -343,7 +344,7 @@ USAGE_2022_ANNUAL <- USAGE |>
 
 Note: Since we are restricting our answers to major transit system, I have filtered total UPT to be greater than 400,000 (shown in code above). 
 
-### Merging 2022 Summary Table with Financial Data Table
+### Merging 2022 Summary Table with `Financial` Data Table
 
 ```{r}
 ##merge summary with Financials report
