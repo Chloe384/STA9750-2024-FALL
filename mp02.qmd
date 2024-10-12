@@ -1,0 +1,204 @@
+# Mini-Project #02: The Business of Show Business
+
+```{r echo=FALSE, message=FALSE }
+##Load any necessary function packages
+library(ggplot2)
+library (tidyverse)
+library(stringr)
+library(dplyr)
+
+##loading the data files
+get_imdb_file <- function(fname) {
+  BASE_URL <- "https://github.com/michaelweylandt/STA9750/raw/main/miniprojects/mini02_preprocessed/"
+  fname_ext <- paste0(fname, ".csv.zip")
+  
+  if (!file.exists(fname_ext)) {
+    FILE_URL <- paste0(BASE_URL, fname_ext)
+    download.file(FILE_URL, destfile = fname_ext)
+  }
+  
+  # Unzip the file and read the CSV
+  temp_file <- unzip(fname_ext, list = TRUE)$Name[1]  # Get the name of the first file inside the ZIP
+  unzip(fname_ext)  # Unzip the file
+  as.data.frame(readr::read_csv(temp_file)) 
+}
+
+NAME_BASICS <- get_imdb_file("name_basics_small")
+
+TITLE_BASICS     <- get_imdb_file("title_basics_small")
+
+TITLE_EPISODES   <- get_imdb_file("title_episodes_small")
+
+TITLE_RATINGS    <- get_imdb_file("title_ratings_small")
+
+TITLE_CREW       <- get_imdb_file("title_crew_small")
+
+TITLE_PRINCIPALS <- get_imdb_file("title_principals_small") 
+```
+
+
+**Initial Exploration**
+
+```{r}
+#changing birthyear & deathyear to number format
+NAME_BASICS <- NAME_BASICS |>
+    mutate(birthYear = as.numeric(birthYear),
+           deathYear = as.numeric(deathYear))
+```
+
+```{r}
+##Task 1: Correct the column types of the TITLE tables using a combination of mutate and the coercion functions as.numeric and as.logical.
+
+# Correcting column types for TITLE_BASICS
+TITLE_BASICS <- TITLE_BASICS |> 
+    mutate(
+        startYear = as.numeric(startYear),
+        endYear = as.numeric(endYear),
+        isAdult = as.logical(isAdult)
+    )
+
+# Correcting column types for TITLE_RATINGS
+TITLE_RATINGS <- TITLE_RATINGS |> 
+    mutate(
+        averageRating = as.numeric(averageRating),
+        numVotes = as.numeric(numVotes)
+    )
+
+# Correcting column types for TITLE_CREW
+TITLE_CREW <- TITLE_CREW |> 
+    mutate(
+        tconst = as.character(tconst)
+    )
+
+# Correcting column types for TITLE_EPISODES
+TITLE_EPISODES <- TITLE_EPISODES |> 
+    mutate(
+        seasonNumber = as.numeric(seasonNumber),
+        episodeNumber = as.numeric(episodeNumber)
+    )
+
+# Correcting column types for TITLE_PRINCIPALS
+TITLE_PRINCIPALS <- TITLE_PRINCIPALS |> 
+    mutate(
+        tconst = as.character(tconst),
+        nconst = as.character(nconst
+    ))
+
+```
+
+```{r}
+NAME_BASICS <- NAME_BASICS |>
+    separate_longer_delim(primaryProfession, ",") |>
+    separate_longer_delim(knownForTitles, ",")
+```
+
+## Task 2:
+
+**1. How many movies are in our data set? How many TV series? How many TV episodes?**
+
+```{r}
+# Count of each type
+movie_count <- TITLE_BASICS |> filter(titleType == "movie") |> nrow()
+tv_series_count <- TITLE_BASICS |> filter(titleType == "tvSeries") |> nrow()
+tv_episode_count <- TITLE_BASICS |> filter(titleType == "tvEpisode") |> nrow()
+
+library(gt)
+tibble(
+  Title_Type = c("Movies", "TV Series", "TV Episodes"),
+  Count = c(movie_count, tv_series_count, tv_episode_count)
+) |>
+  gt() |>
+  tab_header(title = "Counts of Titles in IMDb") |>
+  cols_label(
+    Title_Type = "Title Type",
+    Count = "Number of Titles")
+```
+
+**2. Who is the oldest living person in our data set?**
+
+```{r}
+# Find the oldest living person
+oldest_living <- NAME_BASICS |> 
+    filter(is.na(deathYear)) |> 
+    arrange(birthYear) |> 
+    select(- nconst, 
+           - knownForTitles) |>
+    slice(1)
+
+# Display the oldest living person
+oldest_living |>
+  gt() |>
+  tab_header(title = "Oldest Living Person")
+```
+
+**3. There is one TV Episode in this data set with a perfect 10/10 rating and 200,000 IMDb ratings. What is it? What series does it belong to?**
+
+```{r}
+# Check the total number of perfect episodes
+perfect_episode <- TITLE_RATINGS |> 
+    filter(averageRating == 10, numVotes == 200000) |> 
+    left_join(TITLE_BASICS, by = "tconst", relationship = "many-to-many") |> 
+    select(primaryTitle, titleType, genres)
+
+# Display the result
+perfect_episode |>
+      gt() |>
+      tab_header(title = "TV Episode with Perfect Rating")
+```
+
+**4. What four projects is the actor Mark Hammill most known for?**
+
+```{r}
+# Get projects for Mark Hamill
+mark_hamill_projects <- NAME_BASICS |> 
+    filter(primaryName == "Mark Hamill") |> 
+    select(nconst) |> 
+    left_join(TITLE_PRINCIPALS, by = "nconst") |> 
+    left_join(TITLE_BASICS, by = "tconst") |> 
+    slice_head(n = 4)
+
+mark_hamill_projects |>
+  gt() |>
+  tab_header(title = "Projects Mark Hammill is Most Known For")
+```
+
+**5. What TV series, with more than 12 episodes, has the highest average rating?**
+
+```{r}
+top_tv_series <- TITLE_EPISODES |> 
+    left_join(TITLE_RATINGS, by = "tconst") |> 
+    group_by(parentTconst) |> 
+    summarize(
+        avg_rating = mean(averageRating, na.rm = TRUE), 
+        episode_count = n()
+    ) |> 
+    filter(episode_count > 12) |> 
+    arrange(desc(avg_rating)) |> 
+    left_join(TITLE_BASICS, by = c("parentTconst" = "tconst")) |> 
+    slice(1)
+
+top_tv_series |>
+  gt() |>
+  tab_header(title = "Highest Rating for TV series over 12 Episodes")
+
+```
+**6. The TV series Happy Days (1974-1984) gives us the common idiom “jump the shark”. The phrase comes from a controversial fifth season episode (aired in 1977) in which a lead character literally jumped over a shark on water skis. Idiomatically, it is used to refer to the moment when a once-great show becomes ridiculous and rapidly looses quality.
+
+Is it true that episodes from later seasons of Happy Days have lower average ratings than the early seasons?**
+
+ 
+## Task 3: Custom Success Metric
+
+**1. Choose the top 5-10 movies on your metric and confirm that they were indeed box office successes.**
+
+
+**2. Choose 3-5 movies with large numbers of IMDb votes that score poorly on your success metric and confirm that they are indeed of low quality.**
+
+
+**3. Choose a prestige actor or director and confirm that they have many projects with high scores on your success metric.**
+
+
+**4. Perform at least one other form of ‘spot check’ validation.**
+
+**5. Come up with a numerical threshold for a project to be a ‘success’; that is, determine a value such that movies above are all “solid” or better.**
+
