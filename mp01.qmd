@@ -219,7 +219,6 @@ nyc_subway_trips_may_2024 <- USAGE |>
 nyc_subway_trips_may_2024 |>
   gt() |>
   tab_header(title = "NYC Subway (Heavy Rail) in May 2024")
-
 ```
 
 **5. How much did NYC subway ridership fall between April 2019 and April 2020?**
@@ -466,6 +465,4 @@ The metrics to analyze the most efficient transit system can be measured in diff
 Looking at the **farebox recovery ratio**, Port Imperial Ferry Corporation ferry boat would be the top candidate as it can shows a strong ratio of 1.428 (refer back to Task 6 question 2). This shows that Port Imperial Ferry Corporation ferry boat has strong profitability and has a healthy financial performance. 
 
 If we measure efficiency from **vehicle miles**,  MTA New York City Transit Heavy Rail would be the most efficient transit system. It has the highest vehicle miles travelled (refer to question 1 of Task 3). It provides extensive amount of service indicating high ridership demand. Its vehicles are well utilized and therefore operating efficiently.
-
-
 
