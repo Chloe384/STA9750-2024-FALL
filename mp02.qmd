@@ -1,11 +1,20 @@
-# Mini-Project #02: The Business of Show Business
+---
+title: "The Business of Show Business"
+---
 
-```{r echo=FALSE, message=FALSE }
+Chloe Yu | 10/23/2024
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+#| code-fold: true
+#| code-summary: "Show the code"
+
 ##Load any necessary function packages
 library(ggplot2)
 library (tidyverse)
 library(stringr)
 library(dplyr)
+library(DT)
+library(knitr)
 
 ##loading the data files
 get_imdb_file <- function(fname) {
@@ -34,21 +43,84 @@ TITLE_RATINGS    <- get_imdb_file("title_ratings_small")
 TITLE_CREW       <- get_imdb_file("title_crew_small")
 
 TITLE_PRINCIPALS <- get_imdb_file("title_principals_small") 
+
 ```
 
 
-**Initial Exploration**
+For our NAME_BASICS table, we’ll restrict our attention to people with at least two “known for” credits.
 
 ```{r}
+NAME_BASICS <- NAME_BASICS |> 
+    filter(str_count(knownForTitles, ",") > 1)
+```
+
+IMDb has a long tail of obscure movies:
+
+```{r}
+TITLE_RATINGS |>
+    ggplot(aes(x=numVotes)) + 
+    geom_histogram(bins=30) +
+    xlab("Number of IMDB Ratings") + 
+    ylab("Number of Titles") + 
+    ggtitle("Majority of IMDB Titles Have Less than 100 Ratings") + 
+    theme_bw() + 
+    scale_x_log10(label=scales::comma) + 
+    scale_y_continuous(label=scales::comma)
+
+```
+Throw out any title with less than 100 ratings
+
+```{r}
+TITLE_RATINGS |>
+    pull(numVotes) |>
+    quantile()
+
+TITLE_RATINGS <- TITLE_RATINGS |>
+    filter(numVotes >= 100)
+```
+
+Filtering our dataset
+
+```{r}
+TITLE_BASICS <- TITLE_BASICS |>
+    semi_join(TITLE_RATINGS, 
+              join_by(tconst == tconst))
+
+TITLE_CREW <- TITLE_CREW |>
+    semi_join(TITLE_RATINGS, 
+              join_by(tconst == tconst))
+
+TITLE_EPISODES_1 <- TITLE_EPISODES |>
+    semi_join(TITLE_RATINGS, 
+              join_by(tconst == tconst))
+TITLE_EPISODES_2 <- TITLE_EPISODES |>
+    semi_join(TITLE_RATINGS, 
+              join_by(parentTconst == tconst))
+
+TITLE_EPISODES <- bind_rows(TITLE_EPISODES_1,
+                            TITLE_EPISODES_2) |>
+    distinct()
+
+TITLE_PRINCIPALS <- TITLE_PRINCIPALS |>
+    semi_join(TITLE_RATINGS, join_by(tconst == tconst))
+
+
+rm(TITLE_EPISODES_1)
+rm(TITLE_EPISODES_2)
+```
+
+**Initial Exploration**
+
+```{r, warning=FALSE}
 #changing birthyear & deathyear to number format
 NAME_BASICS <- NAME_BASICS |>
     mutate(birthYear = as.numeric(birthYear),
            deathYear = as.numeric(deathYear))
 ```
 
-```{r}
 ##Task 1: Correct the column types of the TITLE tables using a combination of mutate and the coercion functions as.numeric and as.logical.
 
+```{r, warning=FALSE}
 # Correcting column types for TITLE_BASICS
 TITLE_BASICS <- TITLE_BASICS |> 
     mutate(
@@ -86,13 +158,27 @@ TITLE_PRINCIPALS <- TITLE_PRINCIPALS |>
 
 ```
 
+In the NAME_BASICS table, notice how the primaryProfession and knownForTitles columns combine multiple values.
+
 ```{r}
+glimpse(NAME_BASICS)
+```
+
+For better understanding, let's use the separate_longer_delim function to break these into multiple rows. 
+
+```{r}
+# Separate the 'knownForTitles' and 'primaryProfession' columns into multiple rows
+
 NAME_BASICS <- NAME_BASICS |>
     separate_longer_delim(primaryProfession, ",") |>
     separate_longer_delim(knownForTitles, ",")
 ```
 
-## Task 2:
+################################################################################ 
+
+# Task 2
+
+################################################################################ 
 
 **1. How many movies are in our data set? How many TV series? How many TV episodes?**
 
@@ -116,10 +202,16 @@ tibble(
 
 **2. Who is the oldest living person in our data set?**
 
+The oldest person in out data set is Angel Acciaresi. 
+
 ```{r}
-# Find the oldest living person
+# Find the oldest living person (the oldest living age is 116)
+
+current_year = 2024
+
 oldest_living <- NAME_BASICS |> 
-    filter(is.na(deathYear)) |> 
+    filter(is.na(deathYear)) |>
+    filter(birthYear >= (current_year - 116)) |> #make sure age is less than or equal to 116
     arrange(birthYear) |> 
     select(- nconst, 
            - knownForTitles) |>
@@ -131,19 +223,17 @@ oldest_living |>
   tab_header(title = "Oldest Living Person")
 ```
 
-**3. There is one TV Episode in this data set with a perfect 10/10 rating and 200,000 IMDb ratings. What is it? What series does it belong to?**
+**3. There is one TV Episode in this data set with a perfect 10/10 rating and 200,000 IMDb ratings. What is it? What series does it belong to?** need to work on expanding columns
 
 ```{r}
-# Check the total number of perfect episodes
-perfect_episode <- TITLE_RATINGS |> 
-    filter(averageRating == 10, numVotes == 200000) |> 
-    left_join(TITLE_BASICS, by = "tconst", relationship = "many-to-many") |> 
-    select(primaryTitle, titleType, genres)
+# Join with TITLE_RATINGS to find the perfect episodes
+perfect_tv_episode <- TITLE_RATINGS |>
+    filter(averageRating == 10, numVotes >= 200000) |>
+    left_join(TITLE_BASICS, by = "tconst") 
 
-# Display the result
-perfect_episode |>
-      gt() |>
-      tab_header(title = "TV Episode with Perfect Rating")
+perfect_tv_episode |>
+    gt() |>
+    tab_header(title = "TV Episode with Perfect Rating")
 ```
 
 **4. What four projects is the actor Mark Hammill most known for?**
@@ -155,6 +245,7 @@ mark_hamill_projects <- NAME_BASICS |>
     select(nconst) |> 
     left_join(TITLE_PRINCIPALS, by = "nconst") |> 
     left_join(TITLE_BASICS, by = "tconst") |> 
+    select (characters, titleType, primaryTitle, startYear, endYear, genres) |>
     slice_head(n = 4)
 
 mark_hamill_projects |>
@@ -175,30 +266,277 @@ top_tv_series <- TITLE_EPISODES |>
     filter(episode_count > 12) |> 
     arrange(desc(avg_rating)) |> 
     left_join(TITLE_BASICS, by = c("parentTconst" = "tconst")) |> 
+    select(avg_rating, episode_count, titleType, primaryTitle, startYear, endYear, genres) |>
     slice(1)
 
 top_tv_series |>
   gt() |>
   tab_header(title = "Highest Rating for TV series over 12 Episodes")
-
 ```
+
 **6. The TV series Happy Days (1974-1984) gives us the common idiom “jump the shark”. The phrase comes from a controversial fifth season episode (aired in 1977) in which a lead character literally jumped over a shark on water skis. Idiomatically, it is used to refer to the moment when a once-great show becomes ridiculous and rapidly looses quality.
 
 Is it true that episodes from later seasons of Happy Days have lower average ratings than the early seasons?**
 
- 
+Yes, later seasons of Happy Days have an average rating of 6.87 while earlier seasons of Happy Days have an average rating of 7.47.
+
+```{r}
+#Step 1: find the tconst for Happy Days
+happy_days_tconst <- TITLE_BASICS |>
+  filter(primaryTitle == "Happy Days") |>
+  select(tconst)
+
+#Step 2: Find the episode & rating for Happy days using tconst
+happy_days_episode <- TITLE_EPISODES |>
+  filter(parentTconst%in% happy_days_tconst$tconst) |>
+  inner_join(TITLE_RATINGS, by = "tconst") |>
+  mutate(seasonNumber = as.integer(seasonNumber))
+
+#Step 3: Assume treshold season 1-5 are early season and 6-11 are later season
+happy_days_episode <- happy_days_episode |>
+  mutate(season_group = ifelse(seasonNumber <=5, "Early", "Later"))
+
+#Step 4: Calculate average rating for early and later season
+average_ratings <- happy_days_episode |>
+  group_by(season_group) |>
+  summarise(average_ratings = mean(averageRating, na.rm = TRUE), .groups = 'drop')
+
+print(average_ratings)
+
+```
+
 ## Task 3: Custom Success Metric
+
+I want to define a success metric that balances the quality of the film production and popularity awareness. In our data set, some films have high ratings but low popularity awareness whil other films have low ratings but wide popularity awareness. Hence, i want to create a success metric that can balance average rating and number of votes. First, look below for the distribution of average rating and number of votes. 
 
 **1. Choose the top 5-10 movies on your metric and confirm that they were indeed box office successes.**
 
+```{r}
+movies_ratings_success <- full_join(TITLE_RATINGS, TITLE_BASICS, by = 'tconst') |>
+  filter(titleType == "movie")  #CHANGE THIS NAME
+```
 
-**2. Choose 3-5 movies with large numbers of IMDb votes that score poorly on your success metric and confirm that they are indeed of low quality.**
+```{r}
 
+TITLE_RATINGS <- TITLE_RATINGS |>
+  mutate(success = ((averageRating * 0.6) + (log(numVotes) * 0.4))) 
+
+```
+
+# Success Formula
+
+The success metric is calculated as:
+
+$$
+\text{success} = (0.6 \times \text{averageRating}) + (0.4 \times \log(\text{numVotes}))
+$$
+
+```{r}
+# Step 1: Join TITLE_RATINGS with TITLE_BASICS to filter movies
+top_success_movies <- TITLE_RATINGS |>
+  inner_join(TITLE_BASICS, by = "tconst") |>
+  filter(titleType == "movie") |>
+  arrange(desc(success)) |>
+  slice_head(n = 10) 
+
+# View the updated table with success metric
+top_success_movies |>
+  gt() |>
+  tab_header(title = "Top 10 Successful Movies")
+```
+
+**2. Choose 3-5 movies with large numbers of IMDb votes that score poorly on your success metric and confirm that they are indeed of low quality.** ratings are not low
+
+```{r}
+# Movies with large number of votes but low success metric
+# Question 2: Choose 3-5 movies with large numbers of votes but low success score
+poorly_rated_movies <- TITLE_RATINGS %>%
+  filter(success < 8, numVotes > 100000) %>%  # Threshold for low success
+  inner_join(TITLE_BASICS, by = "tconst") %>%
+  filter(titleType == "movie") %>%
+  select(primaryTitle, averageRating, numVotes, success, startYear) %>%
+  arrange(success) %>%
+  head(5)
+poorly_rated_movies %>%
+  gt() %>%
+  tab_header(
+    title = "Movies with Large IMDb Votes but Low Ratings"
+  )
+```
 
 **3. Choose a prestige actor or director and confirm that they have many projects with high scores on your success metric.**
 
+```{r}
+# Select a prestige actor: Leonardo DiCaprio
+prestige_actor <- NAME_BASICS |>
+    filter(primaryName == "Leonardo DiCaprio") |>
+    select(nconst)
+
+# Get projects for Leonardo DiCaprio
+diCaprio_projects <- TITLE_PRINCIPALS |>
+    filter(nconst %in% prestige_actor$nconst) |>
+    left_join(TITLE_BASICS, by = "tconst") |>
+    left_join(TITLE_RATINGS, by = "tconst") |>
+    select(primaryTitle, averageRating, success) |>
+    arrange(desc(success)) |>
+    slice_head(n=5)
+
+# Display projects with high scores on success metric
+diCaprio_projects |>
+    filter(success > quantile(TITLE_RATINGS$success, 0.75)) |>
+    gt() |>
+    tab_header(title = "Leonardo DiCaprio's High Success Projects")
+
+```
 
 **4. Perform at least one other form of ‘spot check’ validation.**
 
+
 **5. Come up with a numerical threshold for a project to be a ‘success’; that is, determine a value such that movies above are all “solid” or better.**
+
+```{r}
+#Define a success threshold
+success_threshold = 9
+```
+
+##Task 4: Using questions like the following, identify a good “genre” for your next film. You do not need to answer these questions precisely, but these are may help guide your thinking.
+
+To make the visuals easier to interpret, let's split the 'genres' column in TITLE_BASICS
+
+```{r}
+split_genres <- movies_ratings_success |>
+  separate_longer_delim(genres, ",") |>
+  mutate(decade = (startYear %/% 10) * 10)
+
+
+unique(split_genres$decade)
+```
+
+1.  What was the genre with the most “successes” in each decade?
+
+```{r}
+library(dplyr)
+library(tidyr)
+
+TITLE_BASICS <- TITLE_BASICS %>%
+  mutate(decade = floor(startYear / 10) * 10)
+# Filter for movies above success threshold (>7.30)
+successful_movies <- TITLE_RATINGS %>%
+  filter(success > success_threshold) %>%
+  inner_join(TITLE_BASICS, by = "tconst") %>%
+  filter(titleType == "movie")
+# Group
+success_by_genre_decade <- successful_movies %>%
+  separate_rows(genres, sep = ",") %>% # Split multiple genres
+  group_by(decade, genres) %>%
+  summarize(success_count = n(), .groups = 'drop') %>%
+  arrange(desc(success_count))
+library(ggplot2)
+ggplot(success_by_genre_decade, aes(x = decade, y = success_count, fill = genres)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Top Genres with Most Successes Per Decade", x = "Decade", y = "Success Count") +
+  theme_minimal()
+```
+
+
+2.  What genre consistently has the most “successes”? What genre used to reliably produced “successes” and has fallen out of favor?
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Step 1: Filter successful movies based on success metric threshold
+successful_movies <- TITLE_BASICS |>
+  left_join(TITLE_RATINGS, by = "tconst") |>
+  filter(success > success_threshold) |>
+  filter(titleType == "movie")  # Ensure we're only considering movies
+
+# Step 2: Group successful movies by genre and count the number of successes
+genre_success_count <- successful_movies |>
+  separate_rows(genres, sep = ",") |>
+  group_by(genres) |>
+  summarise(success_count = n(), .groups = 'drop') |>
+  arrange(desc(success_count))
+
+# Step 3: Plot the genre success counts
+ggplot(genre_success_count, aes(x = reorder(genres, success_count), y = success_count, fill = genres)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Total Successful Films by Genre", 
+       x = "Genre", 
+       y = "Number of Successful Films") +
+  theme_minimal() +
+  coord_flip() +
+  scale_y_continuous(limits = c(0, max(genre_success_count$success_count) + 10))  # Padding the y-axis for better visibility
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+
+# Step 1: Filter successful movies based on success metric
+successful_movies <- TITLE_BASICS |>
+  left_join(TITLE_RATINGS, by = "tconst") |>
+  filter(success > success_threshold) |>
+  filter(titleType == "movie")  # Only consider movies
+
+# Step 2: Create a 'decade' column to group movies by decade of release
+successful_movies <- successful_movies |>
+  mutate(decade = floor(startYear / 10) * 10)
+
+# Step 3: Separate genres (multiple genres may exist for each movie)
+success_by_genre_decade <- successful_movies |>
+  separate_rows(genres, sep = ",") |>
+  group_by(decade, genres) |>
+  summarise(success_count = n(), .groups = 'drop') |>
+  arrange(decade, genres)
+
+# Step 4: Find genres with a clear decline in success over time
+# Calculate a ratio of success in the most recent decade compared to earlier decades
+genre_trends <- success_by_genre_decade |>
+  group_by(genres) |>
+  summarise(
+    first_decade_success = success_count[which.min(decade)],  # Success in the first decade
+    last_decade_success = success_count[which.max(decade)],  # Success in the last decade
+    total_success = sum(success_count),  # Total success over all decades
+    .groups = 'drop'
+  ) |>
+  filter(last_decade_success < first_decade_success)  # Genres that have declined
+
+# Step 5: View and plot the genres that have fallen out of favor
+genre_trends |>
+  ggplot(aes(x = reorder(genres, -total_success), y = total_success, fill = genres)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Genres That Have Fallen Out of Favor Over Time", 
+       x = "Genre", 
+       y = "Total Successful Films") +
+  theme_minimal() +
+  coord_flip()
+
+
+```
+3.  What genre has produced the most “successes” since 2010? Does it have the highest success rate or does it only have a large number of successes because there are many productions in that genre?
+
+
+```{r}
+successful_movies_after_2010 <- TITLE_BASICS |>
+    filter(startYear >= 2010) |>
+    left_join(TITLE_RATINGS, by = "tconst") |>
+    separate_rows(genres, sep = ",") %>%
+    group_by(genres) %>%
+    summarize(success_count = n(), .groups = 'drop') %>%
+  arrange(desc(success_count))
+
+
+ggplot(successful_movies_after_2010, aes(x = reorder(genres, -success_count), y = success_count)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Most Successful Genres Since 2010", x = "Genres", y = "Success Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+4.  What genre has become more popular in recent years?
+
+
+##Task 5: Identify (at least) two actors and one director who you will target as the key talent for your movie. Write a short “pitch” as to why they are likely to be successful. You should support your pitch with at least one graphic and one table.
 
