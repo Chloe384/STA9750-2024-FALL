@@ -728,7 +728,7 @@ successful_actors |>
 
 ## Nostalgia & Remakes
 
-For my project, I'm choosing to remake ***\["The Shawshank Redemption"\]***(https://www.imdb.com/title/tt0111161/). With an average of 9.3 from over 2.9 million votes, I believe this movie would be a great choice for remake.
+For my project, I'm choosing to remake ["The Shawshank Redemption"](https://www.imdb.com/title/tt0111161/). With an average of 9.3 from over 2.9 million votes, I believe this movie would be a great choice for remake.
 
 ```{r}
 #| code-fold: true
