@@ -1,8 +1,3 @@
----
-title: "The Business of Show Business"
----
-
-Chloe Yu \| 10/23/2024
 
 ![Hollywood Sign, source: Pixabay](hollywood.jpg)
 
@@ -49,8 +44,8 @@ get_imdb_file <- function(fname) {
   }
   
   # Unzip the file and read the CSV
-  temp_file <- unzip(fname_ext, list = TRUE)$Name[1]  # Get the name of the first file inside the ZIP
-  unzip(fname_ext)  # Unzip the file
+  temp_file <- unzip(fname_ext, list = TRUE)$Name[1] 
+  unzip(fname_ext)  
   as.data.frame(readr::read_csv(temp_file)) 
 }
 
@@ -178,8 +173,6 @@ glimpse(NAME_BASICS)
 We can use the `separate_longer_delim` function to break these into multiple rows.
 
 ```{r}
-# Separate the 'knownForTitles' and 'primaryProfession' columns into multiple rows
-
 NAME_BASICS <- NAME_BASICS |>
     separate_longer_delim(primaryProfession, ",") |>
     separate_longer_delim(knownForTitles, ",")
@@ -228,7 +221,6 @@ oldest_living <- NAME_BASICS |>
            - knownForTitles) |>
     slice(1)
 
-# Display the oldest living person
 oldest_living |>
   gt() |>
   tab_header(title = "Oldest Living Person")
@@ -273,19 +265,15 @@ mark_hamill_projects <- NAME_BASICS |>
   rename(tconst = knownForTitles) |>
   left_join(TITLE_BASICS, by = "tconst") |>
   left_join(TITLE_RATINGS, by = "tconst") |>
-  distinct(primaryTitle, .keep_all = TRUE) |>  # Keep unique titles
+  distinct(primaryTitle, .keep_all = TRUE) |>  # remove duplicates
   arrange(desc(averageRating), desc(numVotes) ) |>
   slice_head(n = 4) |>
   select(primaryTitle, startYear, averageRating, numVotes)
 
-# Rename columns
 colnames(mark_hamill_projects) <- c('Movie Title', 'Year of Release', 'Avgerage Rating', 'Number of Votes')
 
-# Display the data table
 mark_hamill_projects |>
   DT::datatable()
-
-
 ```
 
 ## Highest Rating TV Series
@@ -345,7 +333,6 @@ average_ratings <- happy_days_episode |>
   group_by(season_group) |>
   summarise(average_ratings = mean(averageRating, na.rm = TRUE), .groups = 'drop')
 
-
 average_ratings |>
   gt() |>
   tab_header(
@@ -404,7 +391,7 @@ The table shows the top 10 successful movies based on the success metric. These 
 #| code-fold: true
 #| code-summary: "Show the code"
 
-top_success_movies <- movies_ratings_success |>
+top_success_movies <- movies_ratings_success |> 
   arrange(desc(success)) |>
   select(-'tconst',
          -titleType,
@@ -414,7 +401,6 @@ top_success_movies <- movies_ratings_success |>
          -runtimeMinutes) |>
   slice_head(n = 10) 
 
-# View the updated table with success metric
 top_success_movies |>
   gt() |>
   tab_header(title = "Top 10 Successful Movies")
@@ -492,7 +478,7 @@ To "spot check" the credibility of the success metric, I'll select 5 movies that
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
-
+# find success score for these films
 oscar_films <- c('The Silence of the Lambs', 'Interstellar', 'Inception', 'The Dark Knight', 'Alien')
   
 oscar_awards <- movies_ratings_success |>
@@ -519,7 +505,7 @@ oscar_awards |>
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
-
+# find success score for these films
 golden_films <- c("Oppenheimer", "Schindler's List", "The Truman Show", "The Godfather", "Up")
   
 golden_awards <- movies_ratings_success |>
@@ -559,19 +545,19 @@ The visual below shows the number of successful movies (according to my threshol
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
-# First, calculate the success by decade and genre for movies with success above threshold
+# Calculate the success by decade and genre for movies with success above threshold
 successful_movies_above_threshold <- movies_ratings_success |>
   filter(success > success_threshold) |>
   separate_longer_delim(genres, ",") |>
-  mutate(decade = floor(startYear / 10) * 10)  # Group by decade
+  mutate(decade = floor(startYear / 10) * 10) 
 
-# Now, calculate the count of successes for each genre within each decade
+# Calculate the count of successes for each genre within each decade
 success_by_genre_decade <- successful_movies_above_threshold |>
   group_by(decade, genres) |>
   summarize(success_count = n(), .groups = 'drop') |>
   arrange(decade, desc(success_count))
 
-# Plot the top genres by decade
+# Plot graph
 ggplot(success_by_genre_decade, aes(x = decade, y = success_count, fill = genres)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(title = "Top Genres with Most Successes Per Decade", x = "Decade", y = "Success Count") +
@@ -582,7 +568,7 @@ ggplot(success_by_genre_decade, aes(x = decade, y = success_count, fill = genres
 
 Drama remains the genre with the most consistent success, followed by Action and Adventure genres. However, genres like Western and Musical have seen a decline in successful films, suggesting a possible shift in public interest.
 
-```{r, warning=FALSE}
+```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
 #| code-summary: "Show the code"
 
@@ -614,7 +600,7 @@ genre_success_by_decade_plot
 
 **3. What genre has produced the most “successes” since 2010? Does it have the highest success rate or does it only have a large number of successes because there are many productions in that genre?**
 
-Since 2010, Drama genre continued to dominate in producing successful films
+Since 2010, Drama genre continued to dominate in producing successful films.
 
 ```{r}
 #| code-fold: true
@@ -623,7 +609,6 @@ Since 2010, Drama genre continued to dominate in producing successful films
 successful_movies_after_2010 <- successful_movies_above_threshold |>
   filter(startYear >= 2010) 
 
-# Group by genre and count successes
 successful_movies_after_2010 |>
   group_by(genres) |>
   summarize(success_count = n(), .groups = 'drop') |>
@@ -660,10 +645,6 @@ successes_2010_plot <- ggplot(successes_2010, aes(x = genres, y = movie_count, f
   ggtitle('Count of Successful Movies by Genre Since 2010')
 
 successes_2010_plot
-
-
-successes_2010_plot
- 
 ```
 
 ## Finding Successful Personnel in the Genres
@@ -685,25 +666,19 @@ successful_directors <- TITLE_PRINCIPALS |>
   arrange(desc(success_count)) |>
   slice_head(n = 5)  # Keep the top 5 directors
 
-# Set column names
 colnames(successful_directors) <- c('Director Name', 'Successful Movies Count')
 
-# Create and display the DataTable
 successful_directors |>
   DT::datatable()
-
-
 ```
 
-After reviewing the table, I have decided to choose **Steven Spielberg** as the director for our remake project. Scorsese is a powerhouse in the film industry, celebrated for his monumental impact on the Drama genre. His body of work includes timeless classics that have received widespread acclaim and have profoundly shaped the cinematic landscape.
-
-Choosing Steven Spielberg as the director for our remake is a strategic decision that promises to enhance the film's impact and appeal. Renowned for his unparalleled storytelling ability, Spielberg has a proven track record of crafting compelling narratives that resonate with audiences across generations. His mastery of character development allows him to explore complex themes and emotions, which is essential for a film like this. With iconic films such as Schindler’s List and Saving Private Ryan under his belt, Spielberg brings both artistic vision and commercial success to the project. His collaborations with top talent further enrich his films, fostering a creative environment that often leads to groundbreaking outcomes. By selecting Spielberg, we are ensuring that our remake will not only honor the original but also elevate it, making it relevant and captivating for contemporary audiences.
+After looking over the options, I’ve decided to choose **Steven Spielberg** as the director for our remake. His incredible storytelling and ability to create engaging narratives across various genres make him a great fit for this project. With a remarkable track record, Spielberg has directed countless successful films, including classics like *Jurassic Park* and *Schindler’s List*. His strong background in character development and emotional depth makes him an excellent choice for this project. Spielberg’s expertise ensures that our film will not only be captivating but also resonate with audiences on a deeper level.
 
 ### Selected Actors:
 
-**Brad Pitt:** Choosing Brad Pitt for our drama film remake is a strategic decision that brings a wealth of versatility and emotional depth to the project. Known for his ability to tackle a wide range of roles—from intense characters in films like Se7en to charming leads in The Curious Case of Benjamin Button—Pitt excels at conveying complex emotions, which is essential for connecting audiences to the narrative. His significant box office appeal enhances the film’s visibility, while his collaborations with renowned directors demonstrate his commitment to storytelling and ability to elevate the material. With numerous accolades underscoring his talent, Pitt's charisma and dedication to his craft ensure that his performance will resonate deeply, making him an ideal choice to enhance the film's impact and authenticity.
+**Brad Pitt**: Choosing Brad Pitt for our drama remake is a smart decision. He brings a lot of versatility and emotional depth to his roles. Known for his performances in films like *Se7en* and *The Curious Case of Benjamin Button*, Pitt is great at showing complex emotions, which will help connect audiences to the story. According to my analysis, he has 17 successful projects with a success score of over 9.0, which speaks to his ability to resonate with viewers. His strong box office appeal will attract more audiences, and his collaborations with top directors highlight his commitment to quality storytelling. With his talent and charisma, Pitt is the ideal choice to elevate the film’s impact and authenticity.
 
-**Robert De Niro:** De Niro is often considered one of the greatest actors of his time, with a remarkable career that has left a lasting mark on film. With 17 successful projects, he brings both experience and a unique intensity to his roles. His performances are always layered and thought-provoking, allowing him to delve into the complexities of human nature. Having him in our film would not only attract long-time fans but also add authenticity and depth to the story we're telling.
+**Robert De Niro**: De Niro is often seen as one of the greatest actors of his generation, with a remarkable career that has made a lasting impression on film. With 17 successful projects, including classics like *Taxi driver*, he brings experience and intensity to his roles. His performances are always layered and thought-provoking, allowing him to explore the complexities of human nature. Having him in our film would not only attract long-time fans but also add authenticity and depth to our story.
 
 ```{r, warning=FALSE}
 #| code-fold: true
@@ -721,7 +696,6 @@ successful_actors <- TITLE_PRINCIPALS |>
 
 colnames(successful_actors) <- c('Actor Name', 'Successful Movies Count')
 
-# Create and display the DataTable
 successful_actors |>
   DT::datatable()
 ```
@@ -737,7 +711,7 @@ For my project, I'm choosing to remake ["The Shawshank Redemption"](https://www.
 # Define the criteria for classic movies
 current_year <- as.numeric(format(Sys.Date(), "%Y"))
 max_remake_year <- current_year - 25  # No remakes in the last 25 years
-success_threshold <- 9.0  # Your defined success threshold
+success_threshold <- 9.0 
 
 # Find classic movies in the Drama genre with your success metric
 classic_movies <- movies_ratings_success |>
@@ -745,12 +719,10 @@ classic_movies <- movies_ratings_success |>
   filter(startYear <= max_remake_year & success >= success_threshold) |>
   select(primaryTitle, startYear, success, averageRating, numVotes)
 
-# Display the top classic movies based on the success metric
 top_classic_movies <- classic_movies |>
   arrange(desc(success)) |>
   head(10)
 
-# Create a table for the top classic movies
 classic_movies_table <- top_classic_movies |>
   gt() |>
   tab_header(title = "Top Classic Drama Movies to Remake") |>
@@ -768,7 +740,6 @@ There are several legal considerations to address. A handful of actors, director
 #| code-fold: true
 #| code-summary: "Show the code"
 
-# Define the title of the classic movie
 movie_title <- "The Shawshank Redemption"
 
 # Find the tconst for the specified movie
@@ -782,13 +753,12 @@ original_talent_shawshank <- TITLE_PRINCIPALS |>
   filter(tconst == shawshank_tconst) |>
   inner_join(NAME_BASICS, by = "nconst") |>
   filter(is.na(deathYear) | deathYear == 0) |>
-  select(primaryName, category, tconst)
+  select(primaryName, category)
 
-# Remove duplicates
+# Delete duplicates
 original_talent_shawshank <- original_talent_shawshank |>
   distinct(primaryName, category, .keep_all = TRUE)
 
-# Create a table for the original talent
 original_talent_table_shawshank <- original_talent_shawshank |>
   gt() |>
   tab_header(title = "Original Talent from The Shawshank Redemption (Alive)") |>
@@ -805,6 +775,14 @@ original_talent_table_shawshank
 
 ![The Shawshank Redemption, source: IMDb](The%20Shawshank%20Redemption.png)
 
+In our analysis in [Examining Success by Genre and Decade](https://chloe384.github.io/STA9750-2024-FALL/mp02.html#examining-success-by-genre-and-decade), we found that drama have shown consistent success and box office results. We propose a remake of the classic ***The Shawshank Redemption (1994)***, one of the greatest dramas ever made, with an IMDb rating of 9.3 and millions of fans. Since it hasn’t been remade in 25 years, this is the perfect time to bring it back for a new audience.
+
+We envision [Steven Spielberg](https://en.wikipedia.org/wiki/Steven_Spielberg) directing. He is one of the greatest film directors of Hollywood era and is one of the most successful director in film history. With 38 successful films, he masters in telling engaging stories and creating deep characters, making him a reliable choice for box office success. Spielberg also has a strong reputation for delivering great quality works and is a frequent contener for the Academy Awards. Having him on board as a director would definitely bring prestige to our project.
+
+We would like to invite Brad Pitt and Robert De Niro in lead roles. Pitt, known for his emotionally rich portrayals, brings charisma and depth, while De Niro, with his unmatched gravitas, guarantees a powerful on-screen presence. Their collaboration will create a compelling journey that resonates with both old fans and newcomers.
+
+To honor the legacy of the original, we’re considering a special cameo from Tim Robbins, who portrayed Andy Dufresne. This meaningful link would resonate deeply with fans and bridge the gap between the past and present. With its amazing story, star-studded cast, and Spielberg’s direction, this remake has the potential to redefine ***The Shawshank Redemption*** for a new generation and keep it in the conversation for years to come. We believe this project could achieve both critical acclaim and box office success!
+
 > *From the legendary director Steven Spielberg, the visionary behind cinematic masterpieces like Jaws and Schindler’s List…*
 >
 > *Starring the charismatic Brad Pitt, beloved for his unforgettable roles in Fight Club…*
@@ -817,8 +795,3 @@ original_talent_table_shawshank
 >
 > *The Shawshank Redemption. Coming soon to a theater near you.*
 
-***The Shawshank Redemption*** (1994) is celebrated as one of the greatest dramas of all time, holding an impressive IMDb rating of 9.3 and over 2.9 million votes. With no remakes in the last 25 years, this classic is ripe for revival, presenting an opportunity for a fresh interpretation that can resonate with modern audiences.
-
-We are excited to have Steven Spielberg at the helm; with 38 successful films under his belt, he skillfully crafts engaging narratives and delves into complex characters. His remarkable ability to capture the emotional depth that made the original so cherished ensures that the essence of “The Shawshank Redemption” will shine through in this new adaptation.
-
-Joining Spielberg are Hollywood giants Brad Pitt and Robert De Niro. Pitt, with a track record of 33 successful projects, excels at portraying emotionally rich characters, while De Niro, boasting an impressive 95 successes, brings unmatched gravitas to the film. Their collaboration promises a cinematic journey that connects generations. To pay homage to the original, we’re also considering a cameo from Tim Robbins, who portrayed Andy Dufresne, creating a meaningful link for long-time fans. With its engaging story, legendary cast, and visionary direction, this remake aims to redefine “The Shawshank Redemption” for a new audience, ensuring it remains a vital part of cinematic conversation for years to come.
