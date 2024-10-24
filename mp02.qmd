@@ -775,7 +775,7 @@ original_talent_table_shawshank
 
 ![The Shawshank Redemption, source: IMDb](The%20Shawshank%20Redemption.png)
 
-In our analysis in [Examining Success by Genre and Decade](https://chloe384.github.io/STA9750-2024-FALL/mp02.html#examining-success-by-genre-and-decade), we found that drama have shown consistent success and box office results. We propose a remake of the classic ***The Shawshank Redemption (1994)***, one of the greatest dramas ever made, with an IMDb rating of 9.3 and millions of fans. Since it hasn’t been remade in 25 years, this is the perfect time to bring it back for a new audience.
+In our analysis in Examining Success by Genre and Decade, we found that drama have shown consistent success and box office results. We propose a remake of the classic ***The Shawshank Redemption (1994)***, one of the greatest dramas ever made, with an IMDb rating of 9.3 and millions of fans. Since it hasn’t been remade in 25 years, this is the perfect time to bring it back for a new audience.
 
 We envision [Steven Spielberg](https://en.wikipedia.org/wiki/Steven_Spielberg) directing. He is one of the greatest film directors of Hollywood era and is one of the most successful director in film history. With 38 successful films, he masters in telling engaging stories and creating deep characters, making him a reliable choice for box office success. Spielberg also has a strong reputation for delivering great quality works and is a frequent contener for the Academy Awards. Having him on board as a director would definitely bring prestige to our project.
 
