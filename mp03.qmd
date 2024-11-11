@@ -2,7 +2,13 @@
 
 We will use data from [MIT Election Data Science Lab](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2)[^1]. President vote data [^2].
 
-```{r, warning=FALSE}
+Citations:
+
+[^1]: MIT Election Data and Science Lab, 2017, “U.S. House 1976–2022”, https://doi.org/10.7910/DVN/IG0UN2, Harvard Dataverse, V13, UNF:6:Ky5FkettbvohjTSN/IVldA== [fileUNF]
+
+[^2]: MIT Election Data and Science Lab, 2017, “U.S. President 1976–2020”, https://doi.org/10.7910/DVN/42MVDX, Harvard Dataverse, V8, UNF:6:F0opd1IRbeYI9QyVfzglUw== [fileUNF]
+
+```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
 #| code-summary: "Show the code"
 # Define the path to the CSV file
@@ -14,21 +20,22 @@ if (file.exists(csv_file_path)) {
   house_1976_2022 <- read.csv(csv_file_path)}
 ```
 
-```{r, warning=FALSE}
+
+```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
 #| code-summary: "Show the code"
 # Define the path to the CSV file
 csv_file_path_2 <- "C:/Users/zhuol/OneDrive/Documents/STA9750-2024-FALL/president_data/1976-2020-president.csv"
 
-if (file.exists(csv_file_path)) {
+if (file.exists(csv_file_path_2)) {
   # Read the CSV file
-  president_1976_2020 <- read.csv(csv_file_path)}
+  president_1976_2020 <- read.csv(csv_file_path_2)}
 
 ```
 
-## Task 1: Download Congressional Shapefiles 1976-2012
+## Task 1: Download Congressional Shapefiles 1976-2012[^3]
 
-```{r, warning=FALSE}
+```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
 #| code-summary: "Show the code"
 # Load necessary library
@@ -61,9 +68,9 @@ download_ucla_shapefiles(sessions_to_download, ucla_base_url)
 
 ```
 
-## Task 2: Download Congressional Shapefiles 2014-2022
+## Task 2: Download Congressional Shapefiles 2014-2022[^4}]
 
-```{r, warning=FALSE}
+```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
 #| code-summary: "Show the code"
 # Load necessary library
@@ -99,295 +106,6 @@ census_shapefile_urls <- c(
 
 # Download Census shapefiles
 download_census_shapefiles(census_shapefile_urls)
-```
-
-## Task 3: Exploration of Vote Count Data
-
-Answer the following using the vote count data files from the MIT Election Data Science Lab. You may answer each with a table or plot as you feel is appropriate.
-
-1.  Which states have gained and lost the most seats in the US House of Representatives between 1976 and 2022?
-
-```{r echo=TRUE, message=FALSE, warning=FALSE}
-#| code-fold: true
-#| code-summary: "Show the code"
-# Load necessary libraries
-library(dplyr)
-library(ggplot2)
-library(tidyverse)
-
-# Assuming house_1976_2022 is already loaded
-
-# Filter data for 1976 and 2022
-data_1976 <- house_1976_2022 %>% filter(year == 1976)
-data_2022 <- house_1976_2022 %>% filter(year == 2022)
-
-# Summarize the number of distinct districts by state for both years
-summary_1976 <- data_1976 %>%
-  group_by(state, state_po) %>%
-  summarise(seats_1976 = n_distinct(district), .groups = "drop")
-
-summary_2022 <- data_2022 %>%
-  group_by(state, state_po) %>%
-  summarise(seats_2022 = n_distinct(district), .groups = "drop")
-
-# Combine the summaries
-combined <- left_join(summary_1976, summary_2022, by = c("state", "state_po"))
-
-# Calculate the change in seats
-combined <- combined %>%
-  mutate(change = seats_2022 - seats_1976)
-
-# Identify states that gained and lost seats
-gains <- combined %>% filter(change > 0) %>% arrange(desc(change))
-losses <- combined %>% filter(change < 0) %>% arrange(change)
-
-# Create a long format data frame for ggplot
-plot_data <- combined %>%
-  select(state, seats_1976, seats_2022, change) %>%
-  pivot_longer(cols = c(seats_1976, seats_2022), names_to = "year", values_to = "seats")
-
-# Bar graph to show the number of seats in 1976 and 2022
-ggplot(plot_data, aes(x = state, y = seats, fill = year)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(title = "Number of U.S. House Seats by State (1976 vs 2022)",
-       x = "State",
-       y = "Number of Seats",
-       fill = "Year") +
-  scale_fill_manual(values = c("seats_1976" = "blue", "seats_2022" = "red"))
-
-
-# Line graph to show the number of seats over the years
-ggplot(plot_data, aes(x = state, y = seats, color = year, group = year)) +
-  geom_line() +
-  geom_point() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(title = "Number of U.S. House Seats by State (1976 vs 2022)",
-       x = "State",
-       y = "Number of Seats",
-       color = "Year") +
-  scale_color_manual(values = c("seats_1976" = "blue", "seats_2022" = "red"))
-
-
-```
-
-```{r, message=FALSE, warning=FALSE}
-#| code-fold: true
-#| code-summary: "Show the code"
-# Create a mapping of state names to abbreviations
-state_abbreviations <- data.frame(
-  state = c("ALABAMA", "ALASKA", "ARIZONA", "ARKANSAS", "CALIFORNIA", 
-            "COLORADO", "CONNECTICUT", "DELAWARE", "FLORIDA", "GEORGIA", 
-            "HAWAII", "IDAHO", "ILLINOIS", "INDIANA", "IOWA", 
-            "KANSAS", "KENTUCKY", "LOUISIANA", "MAINE", "MARYLAND", 
-            "MASSACHUSETTS", "MICHIGAN", "MINNESOTA", "MISSISSIPPI", 
-            "MISSOURI", "MONTANA", "NEBRASKA", "NEVADA", "NEW HAMPSHIRE", 
-            "NEW JERSEY", "NEW MEXICO", "NEW YORK", "NORTH CAROLINA", 
-            "NORTH DAKOTA", "OHIO", "OKLAHOMA", "OREGON", "PENNSYLVANIA", 
-            "RHODE ISLAND", "SOUTH CAROLINA", "SOUTH DAKOTA", "TENNESSEE", 
-            "TEXAS", "UTAH", "VERMONT", "VIRGINIA", "WASHINGTON", 
-            "WEST VIRGINIA", "WISCONSIN", "WYOMING"),
-  state_po = c("AL", "AK", "AZ", "AR", "CA", 
-               "CO", "CT", "DE", "FL", "GA", 
-               "HI", "ID", "IL", "IN", "IA", 
-               "KS", "KY", "LA", "ME", "MD", 
-               "MA", "MI", "MN", "MS", "MO", 
-               "MT", "NE", "NV", "NH", "NJ", 
-               "NM", "NY", "NC", "ND", "OH", 
-               "OK", "OR", "PA", "RI", "SC", 
-               "SD", "TN", "TX", "UT", "VT", 
-               "VA", "WA", "WV", "WI", "WY")
-)
-
-# Join the abbreviations to the plot_data
-plot_data <- plot_data %>%
-  left_join(state_abbreviations, by = "state")
-
-
-# Bar graph with state abbreviations on the x-axis
-ggplot(plot_data, aes(x = state_po, y = seats, fill = year)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(title = "Number of U.S. House Seats by State (1976 vs 2022)",
-       x = "State Abbreviation",
-       y = "Number of Seats",
-       fill = "Year") +
-  scale_fill_manual(values = c("seats_1976" = "blue", "seats_2022" = "red"))
-
-```
-
-2.  New York State has a unique “fusion” voting system where one candidate can appear on multiple “lines” on the ballot and their vote counts are totaled. For instance, in 2022, Jerrold Nadler appeared on both the Democrat and Working Families party lines for NYS’ 12th Congressional District. He received 200,890 votes total (184,872 as a Democrat and 16,018 as WFP), easily defeating Michael Zumbluskas, who received 44,173 votes across three party lines (Republican, Conservative, and Parent).
-
-Are there any elections in our data where the election would have had a different outcome if the “fusion” system was not used and candidates only received the votes their received from their “major party line” (Democrat or Republican) and not their total number of votes across all lines?
-
-```{r, message=FALSE, warning=FALSE}
-library(gt)
-# Filter for New York State and U.S. House elections
-ny_house_data <- house_1976_2022 %>%
-  filter(state == "NEW YORK", office == "US HOUSE")
-
-# Filter for candidates from major parties only (Democrat or Republican)
-# and keep records for candidates with votes across different lines
-fusion_analysis <- ny_house_data %>%
-  mutate(is_major_party = party %in% c("DEMOCRAT", "REPUBLICAN")) %>%
-  group_by(year, district, candidate) %>%
-  summarise(
-    total_votes_all_lines = sum(candidatevotes),
-    major_party_votes = sum(candidatevotes[is_major_party]),
-    .groups = "drop"
-  )
-
-# Determine the election winner by both fusion and non-fusion scenarios
-# Winner with fusion system (total across all lines)
-winners_fusion <- fusion_analysis %>%
-  group_by(year, district) %>%
-  filter(total_votes_all_lines == max(total_votes_all_lines)) %>%
-  select(year, district, candidate, total_votes_all_lines) %>%
-  rename(fusion_winner = candidate, fusion_votes = total_votes_all_lines)
-
-# Winner without fusion system (major party line votes only)
-winners_nonfusion <- fusion_analysis %>%
-  group_by(year, district) %>%
-  filter(major_party_votes == max(major_party_votes)) %>%
-  select(year, district, candidate, major_party_votes) %>%
-  rename(nonfusion_winner = candidate, nonfusion_votes = major_party_votes)
-
-# Compare outcomes
-election_outcomes <- winners_fusion %>%
-  inner_join(winners_nonfusion, by = c("year", "district")) %>%
-  filter(fusion_winner != nonfusion_winner)
-
-election_outcomes_table <- election_outcomes %>%
-  gt() %>%
-  tab_header(
-    title = "Elections Affected by Fusion Voting System",
-    subtitle = "Comparison of Winners with and without Fusion Voting"
-  ) %>%
-  cols_label(
-    year = "Year",
-    district = "District",
-    fusion_winner = "Winner with Fusion Voting",
-    fusion_votes = "Votes (Fusion)",
-    nonfusion_winner = "Winner without Fusion Voting",
-    nonfusion_votes = "Votes (Non-Fusion)"
-  ) %>%
-  fmt_number(
-    columns = c(fusion_votes, nonfusion_votes),
-    decimals = 0
-  ) %>%
-  tab_style(
-    style = list
-    (
-      cell_fill(color = "lightblue"), 
-      cell_text(weight = "bold")
-    ),
-    locations = list(
-      cells_title(groups = c("title", "subtitle")),  # Apply styles to title and subtitle
-      cells_column_labels(columns = c(fusion_winner, nonfusion_winner))  # Styles for specific column labels
-    )
-  ) %>%
-  tab_options(
-    table.font.size = 14,
-    heading.align = "center"
-  )
-
-```
-
-```{r}
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-
-# Assuming 'election_outcomes' is already created
-
-# Reshape the data into a long format (Fusion vs Non-Fusion)
-election_long <- election_outcomes %>%
-  gather(key = "voting_system", value = "votes", fusion_votes, nonfusion_votes) %>%
-  mutate(voting_system = recode(voting_system, "fusion_votes" = "Fusion Voting", "nonfusion_votes" = "Non-Fusion Voting"))
-
-# Create a line graph to compare Fusion vs Non-Fusion voting systems over the years
-ggplot(election_long, aes(x = year, y = votes, color = voting_system, group = voting_system)) +
-  geom_line(size = 1.2) +       # Line plot
-  geom_point(size = 3) +        # Points on the line
-  labs(
-    title = "Comparison of Fusion vs Non-Fusion Voting Results Over Time",
-    subtitle = "Total Votes for Fusion and Non-Fusion Winners by Year",
-    x = "Year",
-    y = "Total Votes",
-    color = "Voting System"
-  ) +
-  scale_color_manual(values = c("Fusion Voting" = "steelblue", "Non-Fusion Voting" = "darkorange")) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5),
-    plot.subtitle = element_text(hjust = 0.5),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "top"
-  )
-
-```
-
-3.  Do presidential candidates tend to run ahead of or run behind congressional candidates in the same state? That is, does a Democratic candidate for president tend to get more votes in a given state than all Democratic congressional candidates in the same state?
-
-Does this trend differ over time? Does it differ across states or across parties? Are any presidents particularly more or less popular than their co-partisans? \*take two top candiadates with different parties for each presdient year
-
-```{r}
-#| code-fold: true
-#| code-summary: "Show the code"
-# Load necessary libraries
-library(dplyr)
-library(ggplot2)
-
-# Step 1: Aggregate Presidential Votes (sum votes by year, state, and party)
-presidential_votes <- president_1976_2020 %>%
-  group_by(year, state, party) %>%  # Use the correct column name for state and party
-  summarize(total_votes_pres = sum(candidatevotes), .groups = 'drop')
-
-# Step 2: Aggregate Congressional Votes (sum votes by year, state, and party)
-congressional_votes <- house_1976_2022 %>%
-  group_by(year, state, party) %>%  # Ensure correct column names for state and party in house data
-  summarize(total_votes_cong = sum(candidatevotes), .groups = 'drop')
-
-# Step 3: Merge the two datasets (presidential and congressional) on year, state, and party
-merged_votes <- left_join(presidential_votes, congressional_votes, 
-                           by = c("year", "state", "party"), 
-                           suffix = c("_pres", "_cong"))
-
-# Step 4: Calculate the difference between presidential and congressional votes
-merged_votes <- merged_votes %>%
-  mutate(difference = total_votes_pres - total_votes_cong)
-
-# Step 5: Filter data for Democrats and Republicans separately to analyze their performance
-democratic_votes <- merged_votes %>%
-  filter(party == "DEMOCRAT") %>%
-  group_by(year) %>%
-  summarise(average_difference = mean(difference, na.rm = TRUE), .groups = 'drop')
-
-republican_votes <- merged_votes %>%
-  filter(party == "REPUBLICAN") %>%
-  group_by(year) %>%
-  summarise(average_difference = mean(difference, na.rm = TRUE), .groups = 'drop')
-
-# Step 6: Create a line plot for Democratic performance over time
-ggplot(democratic_votes, aes(x = year, y = average_difference)) +
-  geom_line(color = "blue", size = 1.2) +
-  geom_point(size = 2) +
-  labs(title = "Average Vote Difference: Democratic Candidates",
-       subtitle = "Presidential vs Congressional Candidates Over the Years",
-       x = "Year",
-       y = "Average Vote Difference (Presidential - Congressional)") +
-  theme_minimal()
-
-# Step 7: Create a line plot for Republican performance over time
-ggplot(republican_votes, aes(x = year, y = average_difference)) +
-  geom_line(color = "red", size = 1.2) +
-  geom_point(size = 2) +
-  labs(title = "Average Vote Difference: Republican Candidates",
-       subtitle = "Presidential vs Congressional Candidates Over the Years",
-       x = "Year",
-       y = "Average Vote Difference (Presidential - Congressional)") +
-  theme_minimal()
-
 ```
 
 ## Importing and Plotting Shape File Data
@@ -477,42 +195,32 @@ census_shapefiles <- read_census_shapefiles(census_dir, desired_filenames)
 
 ```
 
-## Task 5:
 
-
+Import data for CD_106
 
 ```{r, message=FALSE, warning=FALSE}
-#| code-fold: true
-#| code-summary: "Show the code"
-# Load necessary libraries
+library(usmap)
+library(tools)
+library(sf)
+library(tigris)
 library(dplyr)
 library(ggplot2)
-library(sf)
+CD_106 <- ucla_shapefiles[["districts106.shp"]]
 
-
-# Correct path for reading the shapefile directly from the zip
-CD_107_path <- "C:/Users/zhuol/OneDrive/Documents/STA9750-2024-FALL/districtShapes/districts107.shp"
-
-# Read the shapefile directly from the zip archive
-CD_107 <- st_read(CD_107_path, quiet=TRUE)
-
+# Create electoral college votes column
+CD_106_EC <- CD_106 |>
+  mutate(STATENAME = toupper(STATENAME)) |>
+  select(-geometry) |>
+  as.data.frame() |>
+  group_by(STATENAME) |>
+  summarize( EC = n() + 2)
 ```
 
-task 6: use house file
-
-
-citations:
-
-[^1]: MIT Election Data and Science Lab, 2017, "U.S. House 1976–2022", https://doi.org/10.7910/DVN/IG0UN2, Harvard Dataverse, V13, UNF:6:Ky5FkettbvohjTSN/IVldA== [fileUNF]
-
-[^2]: MIT Election Data and Science Lab, 2017, "U.S. President 1976–2020", https://doi.org/10.7910/DVN/42MVDX, Harvard Dataverse, V8, UNF:6:F0opd1IRbeYI9QyVfzglUw== [fileUNF]
-
-
+## Task 5: 
 
 ```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
 #| code-summary: "Show the code"
-# Load the necessary libraries
 library(usmap)
 library(tools)
 library(sf)
@@ -520,192 +228,128 @@ library(tigris)
 library(dplyr)
 library(ggplot2)
 
-CD_106 <- ucla_shapefiles[["districts106.shp"]]
-  
-CD_106_EC <- CD_106 |>
-  select(-geometry) |>
-  as.data.frame() |>
-  group_by(STATENAME) |>
-  summarize(EC = n() + 2)  # Assuming the number of districts + 2 (for the Senate seats)
-
-presidential_2000 <- president_1976_2020 |>
-  filter(year == 2000)
-
-# Show the winning party for each state (You will need vote data for 2000 or the relevant year)
-vote_results_2000 <- presidential_2000 %>%
-  mutate(state = str_to_title(state)) %>%
+# Filter data for year 2000 and determine the winning party per state
+president_2000 <- president_1976_2020 %>%
+  filter(year == 2000) %>%
   group_by(state) %>%
-  mutate(winning_party = party[which.max(totalvotes)]) %>%
-  slice_max(totalvotes, n = 1) %>%
-  ungroup()
-
-# Special case with Minnesota & Vermont
-vote_results_2000 <- vote_results_2000 %>%
-  mutate(winning_party = ifelse(state == "Minnesota" & winning_party == "DEMOCRATIC-FARMER-LABOR", 
-                                "DEMOCRAT", 
-                                winning_party))
-
-# Combine EC with winning party (same as before, but with new district data)
-EC_2000 <- CD_106_EC %>%
-  left_join(vote_results_2000, by = c("STATENAME" = "state")) %>%
   mutate(
-    winning_party = if_else(STATENAME == "District Of Columbia" & is.na(winning_party), "DEMOCRAT", winning_party),
-    winning_party = if_else(STATENAME == "Vermont", "DEMOCRAT", winning_party)
+    winning_party = party_simplified[which.max(candidatevotes)]  # Assign party with max total votes
   ) %>%
-  select(STATENAME, winning_party, EC)
+  slice_max(candidatevotes, n = 1) %>%  # Only keep the row with the highest totalvotes
+  ungroup()  # Ungroup after summarizing
 
-# Import the U.S. map with geometries (simplified boundary)
-us_states <- states(cb = TRUE)  # cb = TRUE gives cartographic boundaries (simplified)
+# Perform the join between CD_106_EC and president_2000 by state
+president_2000_EC <- CD_106_EC %>%
+  left_join(president_2000, by = c("STATENAME" = "state")) %>%
+  # Select necessary columns including state_fips
+  select(state = STATENAME, EC, winning_party, state_fips)
 
-# Convert both STATENAME and NAME to title-case to match
-us_states$NAME <- str_to_title(us_states$NAME)  # Capitalize state names in 'us_states'
+#import shapefiles for states
+us_state_shapefiles <- usmap::us_map(regions = "states")
 
-# Merge EC_2000 with us_states, keeping geometry
-map_data <- EC_2000 %>%
-  left_join(us_states, by = c("STATENAME" = "NAME")) %>%
-  st_as_sf() %>%  # Ensure the result is an sf object (this converts it into a proper spatial object)
-  select(STATENAME, winning_party, EC, STUSPS, geometry)  # Ensure 'geometry' is included
+us_state_shapefiles <- us_state_shapefiles %>%
+  mutate(fips = as.integer(fips))
 
-# Plot the map with larger states (zooming into the U.S. using coord_sf)
-base_map <- ggplot(data = map_data) +
-  geom_sf(aes(fill = winning_party), color = "white", size = 0.5) +  # Soft borders with white outline
-  scale_fill_manual(values = c("DEMOCRAT" = "#1E3A8A", "REPUBLICAN" = "#B91C1C"),
-                    labels = c("DEMOCRAT" = "Gore", "REPUBLICAN" = "Bush"),
-                    name = "Winning Party") +
-  # Optionally, add the electoral votes as text labels on the map
-  geom_sf_text(aes(label = EC), 
-               size = 3, color = "white", fontface = "bold", nudge_y = 0.5, check_overlap = TRUE) +  # Adjust label position for readability
-  labs(title = "2000 Presidential Election Results by State (CD_106)",
-       subtitle = "Bush vs. Gore",
-       x = NULL, y = NULL) +
-  theme_minimal(base_family = "Helvetica") +
-  theme(axis.text = element_blank(), axis.ticks = element_blank(),
-        panel.grid = element_blank(), 
-        plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "#333333"),
-        plot.subtitle = element_text(hjust = 0.5, size = 12, color = "#555555"),
-        legend.position = "bottom") +
-  theme(legend.title = element_text(face = "bold")) +
-  # Zoom into the U.S. and exclude Alaska/Hawaii
-  coord_sf(xlim = c(-130, -65), ylim = c(25, 50), expand = FALSE)  # Adjust coordinates for zooming
+# Now perform the join
+merged_data <- president_2000_EC |>
+  left_join(us_state_shapefiles, by = c("state_fips" = "fips"))
 
-# Display the final map
-print(base_map)
+# Ensure merged_data is a valid sf object
+merged_data_sf <- st_as_sf(merged_data)
 
+# Plot the map with colors based on the winning party and add EC vote labels
+ggplot(data = merged_data_sf) +
+  geom_sf(aes(fill = winning_party), color = "white", size = 0.2) +  # Color by winning party
+  scale_fill_manual(values = c("REPUBLICAN" = "red", "DEMOCRAT" = "blue"), 
+                    labels = c("REPUBLICAN" = "Bush (Republican)", "DEMOCRAT" = "Gore (Democratic)"), 
+                    name = "Winning Party") +  # Red for Republican, Blue for Democrat
+  geom_sf_text(aes(label = EC), color = "black", size = 3, fontface = "bold") +  # Add EC vote labels
+  theme_minimal() +
+  labs(title = "2000 Presidential Election: Winning Party by State") +  # Removed subtitle
+  theme(legend.position = "bottom", 
+        plot.title = element_text(hjust = 0.5, size = 16))
 ```
 
-```{r}
-CD_107 <- ucla_shapefiles[["districts107.shp"]]
 
 
-# Create electoral college votes column
-CD_107 <- CD_107 |>
-  mutate(STATENAME = tolower(STATENAME)) |>
-  select(-geometry) |>
-  as.data.frame() |>
-  group_by(STATENAME) |>
-  summarize( EC = n() + 2)
+```{r, message=FALSE, warning=FALSE}
+library(usmap)
+library(tools)
+library(sf)
+library(tigris)
+library(dplyr)
+library(ggplot2)
 
-# show winning party for each state
-vote_results_2000 <- presidential_2000 %>%
-  mutate(state = tolower(state)) %>%
-  group_by(state) %>%
-  mutate(winning_party = party[which.max(totalvotes)]) %>%
-  slice_max(totalvotes, n = 1) %>%
-  ungroup()
+# Modify the function to return data for all years
+generate_choropleth_data_for_year <- function(year, district_number, election_data, ucla_shapefiles) {
+  
+  # Load the specific district shapefile
+  district_shapefile <- ucla_shapefiles[[paste0("districts", district_number, ".shp")]]
+  
+  # Create Electoral College votes column based on the district shapefile
+  district_EC <- district_shapefile %>%
+    mutate(STATENAME = toupper(STATENAME)) %>%
+    select(-geometry) %>%
+    as.data.frame() %>%
+    group_by(STATENAME) %>%
+    summarize(EC = n() + 2)  # 2 for senators per state
 
-#Special case with Minnesota & Vermont
-vote_results_2000 <- vote_results_2000 %>%
-  mutate(winning_party = ifelse(state == "minnesota" & winning_party == "DEMOCRATIC-FARMER-LABOR", 
-                                "DEMOCRAT", 
-                                winning_party))
+  # Filter the election data for the given year
+  president_year <- election_data %>%
+    filter(year == year) %>%
+    group_by(state) %>%
+    mutate(
+      winning_party = party_simplified[which.max(candidatevotes)]  # Determine the winning party
+    ) %>%
+    slice_max(candidatevotes, n = 1) %>%  # Only keep the row with the highest total votes
+    ungroup()  # Ungroup after summarizing
+  
+  # Join the election data with the district data (EC votes and winning party)
+  president_EC <- district_EC %>%
+    left_join(president_year, by = c("STATENAME" = "state")) %>%
+    select(state = STATENAME, EC, winning_party, state_fips)
+  
+  # Load U.S. state shapefiles for mapping
+  us_state_shapefiles <- usmap::us_map(regions = "states") %>%
+    mutate(fips = as.integer(fips))
+  
+  # Merge district data with state shapefiles by FIPS code
+  merged_data <- president_EC %>%
+    left_join(us_state_shapefiles, by = c("state_fips" = "fips"))
+  
+  # Add the year column to merge data
+  merged_data$year <- year
+  
+  # Return the merged data for all years (instead of a plot)
+  return(merged_data)
+}
 
-#combine EC with winning party
-EC_2000 <- CD_107 %>%
-  left_join(vote_results_2000, by = c("STATENAME" = "state")) %>%
-  mutate(
-    winning_party = if_else(STATENAME == "district of columbia" & is.na(winning_party), "DEMOCRAT", winning_party),
-    winning_party = if_else(STATENAME == "vermont", "DEMOCRAT", winning_party)
-  ) %>%
-  select(STATENAME, winning_party, EC)
+# Generate data for all election years
+all_years_data <- bind_rows(
+  generate_choropleth_data_for_year(1976, "094", president_1976_2020, ucla_shapefiles),
+  generate_choropleth_data_for_year(1980, "096", president_1976_2020, ucla_shapefiles),
+  generate_choropleth_data_for_year(1984, "098", president_1976_2020, ucla_shapefiles),
+  generate_choropleth_data_for_year(1988, "100", president_1976_2020, ucla_shapefiles),
+  generate_choropleth_data_for_year(1992, "102", president_1976_2020, ucla_shapefiles),
+  generate_choropleth_data_for_year(1996, "104", president_1976_2020, ucla_shapefiles),
+  generate_choropleth_data_for_year(2000, "106", president_1976_2020, ucla_shapefiles),
+  generate_choropleth_data_for_year(2004, "108", president_1976_2020, ucla_shapefiles),
+  generate_choropleth_data_for_year(2008, "110", president_1976_2020, ucla_shapefiles),
+  generate_choropleth_data_for_year(2012, "112", president_1976_2020, ucla_shapefiles)
+)
 
-# Get U.S. state boundaries as a shapefile
-states_map <- st_as_sf(maps::map("state", fill = TRUE, plot = FALSE))
-
-#merge EC_2000 with states_map
-map_data <- states_map %>%
-  left_join(EC_2000, by = c("ID" = "STATENAME"))
-
-# Create a new 'Abbreviations' column with state abbreviations (excluding Hawaii & Alaska)
-map_data <- map_data %>%
-  mutate(Abbreviations = case_when(
-    ID == "alabama" ~ "AL",
-    ID == "arizona" ~ "AZ",
-    ID == "arkansas" ~ "AR",
-    ID == "california" ~ "CA",
-    ID == "colorado" ~ "CO",
-    ID == "connecticut" ~ "CT",
-    ID == "delaware" ~ "DE",
-    ID == "district of columbia" ~ "DC",
-    ID == "florida" ~ "FL",
-    ID == "georgia" ~ "GA",
-    ID == "idaho" ~ "ID",
-    ID == "illinois" ~ "IL",
-    ID == "indiana" ~ "IN",
-    ID == "iowa" ~ "IA",
-    ID == "kansas" ~ "KS",
-    ID == "kentucky" ~ "KY",
-    ID == "louisiana" ~ "LA",
-    ID == "maine" ~ "ME",
-    ID == "maryland" ~ "MD",
-    ID == "massachusetts" ~ "MA",
-    ID == "michigan" ~ "MI",
-    ID == "minnesota" ~ "MN",
-    ID == "mississippi" ~ "MS",
-    ID == "missouri" ~ "MO",
-    ID == "montana" ~ "MT",
-    ID == "nebraska" ~ "NE",
-    ID == "nevada" ~ "NV",
-    ID == "new hampshire" ~ "NH",
-    ID == "new jersey" ~ "NJ",
-    ID == "new mexico" ~ "NM",
-    ID == "new york" ~ "NY",
-    ID == "north carolina" ~ "NC",
-    ID == "north dakota" ~ "ND",
-    ID == "ohio" ~ "OH",
-    ID == "oklahoma" ~ "OK",
-    ID == "oregon" ~ "OR",
-    ID == "pennsylvania" ~ "PA",
-    ID == "rhode island" ~ "RI",
-    ID == "south carolina" ~ "SC",
-    ID == "south dakota" ~ "SD",
-    ID == "tennessee" ~ "TN",
-    ID == "texas" ~ "TX",
-    ID == "utah" ~ "UT",
-    ID == "vermont" ~ "VT",
-    ID == "virginia" ~ "VA",
-    ID == "washington" ~ "WA",
-    ID == "west virginia" ~ "WV",
-    ID == "wisconsin" ~ "WI",
-    ID == "wyoming" ~ "WY",
-    TRUE ~ NA_character_  # In case of missing values, set to NA
-  ))
-
-
-base_map_2 <- ggplot(data = map_data) +
-  geom_sf(aes(fill = winning_party), color = "black") +  # Fill states based on winning party
-  scale_fill_manual(values = c("DEMOCRAT" = "blue", "REPUBLICAN" = "red"),
-                    labels = c("DEMOCRAT" = "Gore", "REPUBLICAN" = "Bush"),
-                    name = "Winning Party") +
-  # Optionally, add the electoral votes as text labels on the map
-  geom_sf_text(aes(label = EC), 
-               size = 3, color = "black", nudge_y = 0.5) +  # Adjust label position for readability
-  labs(title = "2000 Presidential Election Results by State",
-       subtitle = "Bush vs. Gore",
-       x = NULL, y = NULL) +
+# facet graph, work on getting in one column
+ggplot(data = all_years_data) +
+  geom_sf(aes(fill = winning_party, geometry = geom), color = "white", size = 0.2) +  # Color by winning party
+  scale_fill_manual(values = c("REPUBLICAN" = "red", "DEMOCRAT" = "blue"), 
+                    labels = c("REPUBLICAN" = "Republican", "DEMOCRAT" = "Democratic"), 
+                    name = "Winning Party") +  # Red for Republican, Blue for Democrat
+  geom_sf_text(aes(label = EC, geometry = geom), color = "black", size = 3, fontface = "bold") +  # Add EC vote labels
   theme_minimal() +
-  theme(axis.text = element_blank(), axis.ticks = element_blank()) +
-  theme(legend.position = "bottom")
+  labs(title = "2000 Presidential Election: Winning Party by State") +  # Removed subtitle
+  theme(legend.position = "bottom", 
+        plot.title = element_text(hjust = 0.5, size = 16)) +
+  facet_wrap(~ year)
+# for annimated, try     transition_year(frame)
 
-# Display the final map
-print(base_map_2)
 ```
