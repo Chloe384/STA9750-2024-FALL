@@ -2,8 +2,6 @@
 
 We will use data from [MIT Election Data Science Lab](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2)[^1]. President vote data [^2].
 
-Citations:
-
 [^1]: MIT Election Data and Science Lab, 2017, “U.S. House 1976–2022”, https://doi.org/10.7910/DVN/IG0UN2, Harvard Dataverse, V13, UNF:6:Ky5FkettbvohjTSN/IVldA== [fileUNF]
 
 [^2]: MIT Election Data and Science Lab, 2017, “U.S. President 1976–2020”, https://doi.org/10.7910/DVN/42MVDX, Harvard Dataverse, V8, UNF:6:F0opd1IRbeYI9QyVfzglUw== [fileUNF]
@@ -269,16 +267,18 @@ ggplot(data = merged_data_sf) +
   theme(legend.position = "bottom", 
         plot.title = element_text(hjust = 0.5, size = 16))
 ```
-
-
+## Task 6:
 
 ```{r, message=FALSE, warning=FALSE}
+#| code-fold: true
+#| code-summary: "Show the code"
 library(usmap)
 library(tools)
 library(sf)
 library(tigris)
 library(dplyr)
 library(ggplot2)
+library(gganimate)
 
 # Modify the function to return data for all years
 generate_choropleth_data_for_year <- function(year, district_number, election_data, ucla_shapefiles) {
@@ -350,6 +350,33 @@ ggplot(data = all_years_data) +
   theme(legend.position = "bottom", 
         plot.title = element_text(hjust = 0.5, size = 16)) +
   facet_wrap(~ year)
-# for annimated, try     transition_year(frame)
+```
+
+Try task 6 using animation
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(sf)  # For working with spatial data
+
+# Assuming all_years_data is already created, now let's plot it with adjusted axes.
+
+ggplot(data = all_years_data) +
+  geom_sf(aes(fill = winning_party, geometry = geom), color = "white", size = 0.2) +  # Color by winning party
+  scale_fill_manual(values = c("REPUBLICAN" = "red", "DEMOCRAT" = "blue"), 
+                    labels = c("REPUBLICAN" = "Republican", "DEMOCRAT" = "Democratic"), 
+                    name = "Winning Party") +  # Red for Republican, Blue for Democrat
+  geom_sf_text(aes(label = EC, geometry = geom), color = "black", size = 3, fontface = "bold") +  # Add EC vote labels
+  theme_minimal() +
+  labs(title = "U.S. Presidential Election Results by Year", subtitle = "Winning Party by State and EC Votes") +  # Added subtitle
+  theme(
+    legend.position = "bottom", 
+    plot.title = element_text(hjust = 0.5, size = 16),
+    strip.text = element_text(size = 10),  # Adjust facet title size
+    axis.text = element_blank(),  # Remove axis text (numbers)
+    axis.ticks = element_blank(),  # Remove axis ticks
+    axis.title = element_blank()  # Remove axis labels (titles)
+  ) +
+  facet_wrap(~ year, ncol = 1)  # Facet by year, arranging all years in a single column
 
 ```
