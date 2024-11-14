@@ -1,24 +1,20 @@
 # Mini-Project #03: Do Proportional Electoral College Allocations Yield a More Representative Presidency?
 
-
-![US Election. Source: BBC News](election.png)
-
+![U.S. Election. Source: BBC News](election.png)
 
 ## Introduction:
 
 The U.S. Electoral College (EC) system plays a crucial role in presidential elections, often making the process more complicated than a straightforward nationwide popular vote. The system has been the subject of ongoing debate, particularly when election results do not align with the popular vote. This analysis aims to examine how the allocation methods used in the Electoral College influence election outcomes and whether they create any potential bias, particularly in favor of one political party.
 
+In this analysis, we explore U.S. House election data from 1976 to 2022, sourced from the [MIT Election Data and Science Lab](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2), to better understand voting patterns, party dominance, and demographic shifts. By comparing this data with U.S. Presidential election results, we examine whether a proportional Electoral College system would lead to a presidency that more closely reflects the popular vote and voter sentiment, offering a more representative outcome in future elections.
 
-In this analysis, we explore U.S. House election data from 1976 to 2022, sourced from the MIT Election Data and Science Lab(https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2), to better understand voting patterns, party dominance, and demographic shifts. By comparing this data with U.S. Presidential election results, we examine whether a proportional Electoral College system would lead to a presidency that more closely reflects the popular vote and voter sentiment, offering a more representative outcome in future elections.
+## Data I: US House Election Votes from 1976 to 2022[^mp03-1]
 
-## Data I: US House Election Votes from 1976 to 2022
+[^mp03-1]: MIT Election Data and Science Lab, 2017, "U.S. House 1976–2022", https://doi.org/10.7910/DVN/IG0UN2, Harvard Dataverse, V13, UNF:6:Ky5FkettbvohjTSN/IVldA== \[fileUNF\]
 
-In this analysis, we will use data from the [MIT Election Data Science Lab](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2)[^1], which provides comprehensive details on U.S. House election outcomes from 1976 to 2022. Additionally, we will incorporate data on U.S. presidential elections[^2] to explore trends across both national and congressional races from 1976 to 2020. This rich dataset allows us to investigate voting patterns, party shifts, and electoral dynamics over nearly half a century.
+In this analysis, we will use data from the [MIT Election Data Science Lab](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2), which provides comprehensive details on U.S. House election outcomes from 1976 to 2022. Additionally, we will incorporate data on [U.S. presidential elections](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/42MVDX)[^mp03-2] to explore trends across both national and congressional races from 1976 to 2020. This rich dataset allows us to investigate voting patterns, party shifts, and electoral dynamics over nearly half a century.
 
-[^1]: MIT Election Data and Science Lab, 2017, “U.S. House 1976–2022”, https://doi.org/10.7910/DVN/IG0UN2, Harvard Dataverse, V13, UNF:6:Ky5FkettbvohjTSN/IVldA== [fileUNF]
-
-[^2]: MIT Election Data and Science Lab, 2017, “U.S. President 1976–2020”, https://doi.org/10.7910/DVN/42MVDX, Harvard Dataverse, V8, UNF:6:F0opd1IRbeYI9QyVfzglUw== [fileUNF]
-
+[^mp03-2]: MIT Election Data and Science Lab, 2017, "U.S. President 1976–2020", https://doi.org/10.7910/DVN/42MVDX, Harvard Dataverse, V8, UNF:6:F0opd1IRbeYI9QyVfzglUw== \[fileUNF\]
 
 ```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
@@ -38,6 +34,7 @@ library(knitr)
 library(kableExtra)
 library(formattable)
 library(scales)
+library(DT)
 #| code-fold: true
 #| code-summary: "Show the code"
 
@@ -58,12 +55,13 @@ if (file.exists(csv_file_path_2)) {
 
 ```
 
-## Task 1: Download Congressional Shapefiles 1976-2012[^3]
+## Task 1: Download Congressional Shapefiles 1976-2012[^mp03-3]
 
-Next, to visualize past election results on a U.S. map, we need to download the district shapefiles for the U.S. from 1976 to 2022. Specifically, we will obtain the district shapefiles from 1976 to 2012 from Lewis et al.[^3], using the following code to automate the process.
+[^mp03-3]: https://cdmaps.polisci.ucla.edu/
 
+Next, to visualize past election results on a U.S. map, we need to download the district shapefiles for the U.S. from 1976 to 2022. Specifically, we will obtain the district shapefiles from 1976 to 2012 from Lewis et al.[^mp03-4], using the following code to automate the process.
 
-[^3]: https://cdmaps.polisci.ucla.edu/
+[^mp03-4]: https://cdmaps.polisci.ucla.edu/
 
 ```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
@@ -96,12 +94,13 @@ download_ucla_shapefiles(sessions_to_download, ucla_base_url)
 
 ```
 
-## Task 2: Download Congressional Shapefiles 2014-2022[^4]
+## Task 2: Download Congressional Shapefiles 2014-2022[^mp03-5]
 
-For elections from 2014 to the present, we can use the following code to automatically download congressional district shapefiles for the US Census Bureau[^4].
+[^mp03-5]: https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html
 
+For elections from 2014 to the present, we can use the following code to automatically download congressional district shapefiles for the US Census Bureau[^mp03-6].
 
-[^4]: https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html
+[^mp03-6]: https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html
 
 ```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
@@ -141,7 +140,7 @@ download_census_shapefiles(census_shapefile_urls)
 
 **Question 1: Which states have gained and lost the most seats in the US House of Representatives between 1976 and 2022?**
 
-Using the code below, I create a bar chart to illustrate the  number of seats in the US House of Representatives between 1976 and 2022 per state. Over time, certain states have gained and/or lost seats based on population changes.
+Using the code below, I create a bar chart to illustrate the number of seats in the US House of Representatives between 1976 and 2022 per state. Over time, certain states have gained and/or lost seats based on population changes.
 
 ```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
@@ -169,8 +168,8 @@ ggplot(seats_1976_2022, aes(x = state_po, y = seats, fill = factor(year))) +
         legend.position = "bottom") +
   scale_fill_manual(values = c("1976" = "skyblue", "2022" = "darkorange"))
 ```
-In the code below, I calculated the change in the number of seats in the U.S. House of Representatives from 1976 to 2022, highlighting how shifts in population have affected state representation. Texas saw the largest gain, with an increase of 14 seats, while New York had the largest loss, dropping 13 seats. In total, 15 states gained seats, while 19 states lost seats. These changes result from population fluctuations recorded in the decennial U.S. Census, which determines how the 435 House seats are distributed among states based on their relative populations. Such shifts in representation reflect broader trends in demographics, migration, and population growth or decline over time.
 
+In the code below, I calculated the change in the number of seats in the U.S. House of Representatives from 1976 to 2022, highlighting how shifts in population have affected state representation. Texas saw the largest gain, with an increase of 14 seats, while New York had the largest loss, dropping 13 seats. In total, 15 states gained seats, while 19 states lost seats. These changes result from population fluctuations recorded in the decennial U.S. Census, which determines how the 435 House seats are distributed among states based on their relative populations. Such shifts in representation reflect broader trends in demographics, migration, and population growth or decline over time.
 
 ```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
@@ -203,11 +202,11 @@ ggplot(gains_losses, aes(x = reorder(state, seat_change), y = seat_change, fill 
   theme_minimal()
 ```
 
-
 **Question 2: New York State has a unique “fusion” voting system where one candidate can appear on multiple “lines” on the ballot and their vote counts are totaled. For instance, in 2022, Jerrold Nadler appeared on both the Democrat and Working Families party lines for NYS’ 12th Congressional District. He received 200,890 votes total (184,872 as a Democrat and 16,018 as WFP), easily defeating Michael Zumbluskas, who received 44,173 votes across three party lines (Republican, Conservative, and Parent).**
 
 Are there any elections in our data where the election would have had a different outcome if the “fusion” system was not used and candidates only received the votes their received from their “major party line” (Democrat or Republican) and not their total number of votes across all lines?
 
+In the table, I’ve included a comparison of districts where there was a notable difference in the winner under the fusion voting system. The results suggest that New York’s election outcomes are significantly impacted by the fusion system, as it appears to influence the final winner in many districts. The data suggests that the fusion system plays an important role in shaping election results in New York.
 
 ```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
@@ -254,67 +253,15 @@ kable(comparison_winner_df,
 
 ```
 
-
-
-
 **Question 3: Do presidential candidates tend to run ahead of or run behind congressional candidates in the same state? That is, does a Democratic candidate for president tend to get more votes in a given state than all Democratic congressional candidates in the same state?**
 
 Does this trend differ over time? Does it differ across states or across parties? Are any presidents particularly more or less popular than their co-partisans?
 
-```{r, message=FALSE, warning=FALSE}
-library(DT)
-library(dplyr)
-
-# Find winner without fusion system
-winner_no_fusion_votes <- house_1976_2022 %>%
-  group_by(year, state, district, candidate, party) %>%
-  summarize(party_votes = sum(candidatevotes)) %>%
-  ungroup() %>%
-  group_by(year, state, district) %>%
-  filter(party_votes == max(party_votes)) %>%
-  ungroup() %>%
-  select(c(year, state, district, candidate))
-
-# Find winner with fusion system
-winner_fusion_votes <- house_1976_2022 %>%
-  group_by(year, state, district, candidate) %>%
-  summarize(candidate_total = sum(candidatevotes)) %>%
-  ungroup() %>%
-  group_by(year, state, district) %>%
-  filter(candidate_total == max(candidate_total)) %>%
-  ungroup() %>%
-  select(c(year, state, district, candidate))
-
-# Combine to compare difference
-comparison_winner <- left_join(winner_fusion_votes, winner_no_fusion_votes, by = c("year", "state", "district")) %>%
-  rename(winner_fusion = candidate.x,
-         winner_no_fusion = candidate.y) %>%
-  mutate(same_winner = (winner_fusion == winner_no_fusion)) %>%
-  filter(same_winner == FALSE)
-
-# Prepare the data frame for DT
-comparison_winner_df <- comparison_winner %>%
-  select(c('year', 'state', 'district', 'winner_fusion', 'winner_no_fusion'))
-
-# Create a DT table for the results
-datatable(comparison_winner_df, 
-          caption = "Table 1: Differences in House Seat Winners with Fusion and Without Fusion", 
-          colnames = c("Year", "State", "District", "Fusion Winner", "No Fusion Winner"),
-          options = list(pageLength = 10, autoWidth = TRUE)) %>%
-  formatStyle(columns = c("year", "state", "district", "winner_fusion", "winner_no_fusion"), 
-              backgroundColor = styleEqual(c("Fusion Winner", "No Fusion Winner"), c("lightblue", "lightgray")))
-
-```
-
-**Question 3: Do presidential candidates tend to run ahead of or run behind congressional candidates in the same state? That is, does a Democratic candidate for president tend to get more votes in a given state than all Democratic congressional candidates in the same state?**
-
-Does this trend differ over time? Does it differ across states or across parties? Are any presidents particularly more or less popular than their co-partisans?
-
+Looking at the table, I noticed that there were many cases in which presidential candidates tend to run ahead of the congressional candidates in the same state.This trend suggests that voters may be more engaged or focused on the presidential race, potentially leading to higher turnout or stronger support for presidential candidates compared to those running for Congress.
 
 ```{r, message=FALSE, warning=FALSE}
-library(DT)
-library(dplyr)
-
+#| code-fold: true
+#| code-summary: "Show the code"
 # Summarize presidential votes for candidates
 presidential_votes <- president_1976_2020 %>%
   filter(party_simplified %in% c("DEMOCRAT", "REPUBLICAN")) %>%
@@ -356,14 +303,13 @@ datatable(vote_comparison_cleaned,
                                            c("lightgreen", "lightcoral")))
 ```
 
-
 ## Importing and Plotting Shape File Data
 
 ## Task 4: Automate Zip File Extraction
 
 Reading Data I
 
-In this code, I created a function to read the UCLA shapefiles that were previously downloaded. The function first searches the specified directory for .zip files and extracts them into a temporary directory. It then looks for the .shp files inside the unzipped contents. For each shapefile, the code uses the sf package to read it into R as a simple features object (a standardized format for spatial data). The shapefiles are stored in a list, with each entry named after the corresponding shapefile. Finally, the function returns this list of shapefiles, which can be used for further analysis.
+In this code, I created a function to read the UCLA shapefiles that were previously downloaded.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 #| code-fold: true
@@ -395,8 +341,7 @@ ucla_shapefiles <- read_ucla_shapefiles(ucla_dir)
 
 Reading data II
 
-In this code, I created a function to read specific Census shapefiles into R. The function first searches the specified directory for .zip files and extracts them into a temporary directory. It then looks for .shp files within the unzipped contents. For each shapefile, the code checks if its filename matches a list of desired filenames (provided in the desired_filenames vector). If there's a match, the shapefile is read into R using the sf package and stored as a simple features object. The shapefiles are saved in a list, with each entry named after the corresponding shapefile. Finally, the function returns this list of selected shapefiles, which can be used for further spatial analysis.
-
+Similarly, in this code, I created a function to read specific Census shapefiles into R.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 #| code-fold: true
@@ -443,11 +388,9 @@ census_shapefiles <- read_census_shapefiles(census_dir, desired_filenames)
 
 ```
 
-
 ## Task 5: Chloropleth Visualization of the 2000 Presidential Election Electoral College Results
 
 In this code, I created a choropleth map to visualize the results of the 2000 U.S. Presidential Election, highlighting the winning party in each state and displaying the number of Electoral College votes (EC) each state contributed. We will use the blue color for the Democratic candidate, Al Gore, and red color to represent the Republican candidate, George W. Bush.
-
 
 ```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
@@ -504,8 +447,7 @@ ggplot(data = merged_data_sf) +
         plot.title = element_text(hjust = 0.5, size = 16))
 ```
 
-
-## Task 6:  Advanced Chloropleth Visualization of Electoral College Results
+## Task 6: Advanced Chloropleth Visualization of Electoral College Results
 
 We can expand our findings beyond the 2000 presidential election to show election results over time from 1976-2020.
 
@@ -578,7 +520,7 @@ for (i in 1:length(years)) {
 
 ```
 
-Election map for 2016: 
+Election map for 2016:
 
 ```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
@@ -699,15 +641,13 @@ ggplot(data = merged_data_sf) +
 
 The different Electoral College (ECV) allocation rules can have a major impact on presidential election results. Four key ECV strategies are typically considered:
 
-1. State-Wide Winner-Take-All
-2. District-Wide Winner-Take-All + State-Wide "At Large" Votes
-3. State-Wide Proportional
-4. National Proportional
+1.  **State-Wide Winner-Take-All**: Under this system, the candidate who wins the majority of votes in a state receives all of that state’s electoral votes.
 
+2.  **District-Wide Winner-Take-All + State-Wide "At Large" Votes**: Under this system, a state’s electoral votes based on the winner of individual districts, while the remaining votes are awarded to the statewide winner. It creates more regional representation while still maintaining a dominant role for the overall state victor.
 
-## State-Wide Winner-Take-All
+3.  **State-Wide Proportional**: In this system, electoral votes are distributed in proportion to the percentage of votes each candidate receives within the state.
 
-Under this system, the candidate who wins the majority of votes in a state receives all of that state’s electoral votes. 
+4.  **National Proportional**: In this system, electoral votes are allocated across the entire country based on the national vote share, rather than on a state-by-state basis.
 
 ```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
@@ -756,24 +696,6 @@ election_winner_state_wide <- state_wide_winner %>%
          state_wide_party = party,
          state_wide_results = results)
 
-# Create the kable table
-kable(election_winner_state_wide, 
-      caption = "Table 3: State-Wide Winner-Take-All Election Winners", 
-      col.names = c("Year", "Winner", "Party", "Electoral College Votes"),
-      format = "html", 
-      align = "c") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
-
-```
-
-## District-Wide Winner-Take-All + State-Wide “At Large” Votes
-
-Under this system, a state’s electoral votes based on the winner of individual districts, while the remaining votes are awarded to the statewide winner. It creates more regional representation while still maintaining a dominant role for the overall state victor.
-
-```{r echo=TRUE, message=FALSE, warning=FALSE}
-#| code-fold: true
-#| code-summary: "Show the code"
-
 winner_per_district_by_year <- house_1976_2022 %>%
   group_by(year, state, district) %>%
   filter(candidatevotes == max(candidatevotes)) %>%
@@ -813,20 +735,6 @@ election_winner_district_wide <- left_join(merge_district_ecv_count, state_wide_
          district_wide_party = party,
          district_wide_results = candidate_ecv_total)
 
-election_winner_district_wide %>%
-  select(year, district_wide_winner, district_wide_party, district_wide_results) %>%
-  kable(caption = "Table 4: District-Wide Winner-Take-All + State-Wide 'At Large' Votes Election Winners") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
-
-```
-
-## State wide proportional
-
-In this system, electoral votes are distributed in proportion to the percentage of votes each candidate receives within the state.
-
-```{r, message=FALSE, warning=FALSE}
-#| code-fold: true
-#| code-summary: "Show the code"
 state_wide_proportional <- president_1976_2020 %>%
   mutate(prop = candidatevotes / totalvotes)
 
@@ -846,20 +754,6 @@ election_winner_state_prop <- ecv_state_proportion_winner %>%
          state_prop_party = party_simplified,
          state_prop_results = combined_ecv)
 
-election_winner_state_prop %>%
-  select(year, state_prop_winner, state_prop_party, state_prop_results) %>%
-  kable(caption = "Table 5: State-Wide Proportional Election Winner") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
-
-```
-
-## National proportion
-
-In this system, electoral votes are allocated across the entire country based on the national vote share, rather than on a state-by-state basis. 
-
-```{r, message=FALSE, warning=FALSE}
-#| code-fold: true
-#| code-summary: "Show the code"
 nation_wide_proportional <- president_1976_2020 %>%
   group_by(year, candidate, party_simplified) %>%
   summarize(candidate_total = sum(candidatevotes)) %>%
@@ -885,17 +779,92 @@ election_winner_nation_prop <- merge_nation_wide_ecv %>%
   rename(nation_prop_winner = candidate,
          nation_prop_party = party_simplified,
          nation_prop_results = combined_ecv)
+```
 
-election_winner_nation_prop %>%
+```{r, message=FALSE, warning=FALSE}
+#| code-fold: true
+#| code-summary: "Show the code"
+
+# Combining data for all four election systems
+
+# State-Wide Winner-Take-All Results
+state_wide_results <- election_winner_state_wide %>%
+  select(year, state_wide_winner, state_wide_party, state_wide_results) %>%
+  rename(winner_state_wide = state_wide_winner,
+         party_state_wide = state_wide_party,
+         results_state_wide = state_wide_results)
+
+# District-Wide Winner-Take-All + State-Wide "At Large" Votes Results
+district_wide_results <- election_winner_district_wide %>%
+  select(year, district_wide_winner, district_wide_party, district_wide_results) %>%
+  rename(winner_district_wide = district_wide_winner,
+         party_district_wide = district_wide_party,
+         results_district_wide = district_wide_results)
+
+# State-Wide Proportional Results
+state_prop_results <- election_winner_state_prop %>%
+  select(year, state_prop_winner, state_prop_party, state_prop_results) %>%
+  rename(winner_state_prop = state_prop_winner,
+         party_state_prop = state_prop_party,
+         results_state_prop = state_prop_results)
+
+# National Proportional Results
+nation_prop_results <- election_winner_nation_prop %>%
   select(year, nation_prop_winner, nation_prop_party, nation_prop_results) %>%
-  kable(caption = "Table 6: National Proportional Election Winner") %>%
+  rename(winner_nation_prop = nation_prop_winner,
+         party_nation_prop = nation_prop_party,
+         results_nation_prop = nation_prop_results)
+
+# Merging all the results into one table
+combined_results <- state_wide_results %>%
+  full_join(district_wide_results, by = "year") %>%
+  full_join(state_prop_results, by = "year") %>%
+  full_join(nation_prop_results, by = "year")
+
+# Display the final table
+kable(combined_results, 
+      caption = "Comparison of Election Winners Across Four Systems", 
+      col.names = c("Year", 
+                    "Winner (State-Wide Winner-Take-All)", "Party (State-Wide Winner-Take-All)", "Electoral Votes (State-Wide Winner-Take-All)",
+                    "Winner (District-Wide Winner-Take-All + At-Large)", "Party (District-Wide Winner-Take-All + At-Large)", "Electoral Votes (District-Wide Winner-Take-All + At-Large)",
+                    "Winner (State-Wide Proportional)", "Party (State-Wide Proportional)", "Electoral Votes (State-Wide Proportional)",
+                    "Winner (National Proportional)", "Party (National Proportional)", "Electoral Votes (National Proportional)"),
+      format = "html", 
+      align = "c") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
 
 ```
 
+Overall, the election results show a notable degree of consistency across the four systems, with the same candidates typically emerging as winners under each method. However, in the years 1988 and 2016, there were slight discrepancies between the winner and their party, depending on the electoral system used. These differences suggest that, while the general trend is stable, the specific mechanics of each voting system can sometimes lead to variations in how the results are distributed or which candidate is declared the winner.
 
-I believe the National Proportional method is the fairest ECV system, as it allocates electoral votes based on the national popular vote, ensuring that the candidate with the most votes nationwide wins. This would eliminate the possibility of a candidate losing the election despite winning the popular vote. However, implementing this system would require agreement from all states and likely a constitutional amendment.
+```{r, message=FALSE, warning=FALSE}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Combine all results into a single long-format dataset for plotting
+combined_results_long <- combined_results %>%
+  gather(key = "system", value = "results", 
+         winner_state_wide, winner_district_wide, winner_state_prop, winner_nation_prop) %>%
+  gather(key = "party_system", value = "party", 
+         party_state_wide, party_district_wide, party_state_prop, party_nation_prop) %>%
+  gather(key = "votes_system", value = "electoral_votes", 
+         results_state_wide, results_district_wide, results_state_prop, results_nation_prop) %>%
+  select(year, system, electoral_votes, party)
 
-On the other hand, the State-Wide Winner-Take-All method is the least fair. It allows a candidate to win the presidency by securing enough states to reach 270 electoral votes, even if they lose the national popular vote. This results in an outcome where the Electoral College winner may not reflect the majority of voters’ preferences.[^5]
+# Create the plot
+ggplot(combined_results_long, aes(x = year, y = electoral_votes, fill = system)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ system, scales = "free_y") + # Facet by system
+  labs(title = "Comparison of Election Winners Across Four Systems", 
+       y = "Electoral Votes", 
+       x = "Year", 
+       fill = "System") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "bottom")
+```
 
-[^5]: Part of project code collaborated with Yanting Zhao and Haolin Mo
+I believe the **National Proportional** method is the fairest ECV system, as it allocates electoral votes based on the national popular vote, ensuring that the candidate with the most votes nationwide wins. This would eliminate the possibility of a candidate losing the election despite winning the popular vote. However, implementing this system would require agreement from all states and likely a constitutional amendment.
+
+On the other hand, the **State-Wide Winner-Take-All** method is the least fair. It allows a candidate to win the presidency by securing enough states to reach 270 electoral votes, even if they lose the national popular vote. This results in an outcome where the Electoral College winner may not reflect the majority of voters’ preferences.[^mp03-7]
+
+[^mp03-7]: Part of project code collaborated with Yanting Zhao and Haolin Mo
