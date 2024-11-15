@@ -667,6 +667,134 @@ ggplot(data = merged_data_sf) +
         plot.title = element_text(hjust = 0.5, size = 16))
 ```
 
+The animated plot illustrates how the election results have evolved over the years. One notable trend is the increasing number of states that have voted Democratic. In 1976, most states leaned Republican, but by 1984, only Minnesota was won by the Democratic Party, with the rest going to the Republicans. As time progresses, we see a growing number of states shifting toward the Democratic Party. By 2012, the nation was evenly split, with half of the states voting Democratic and the other half Republican.
+
+
+```{r, message=FALSE, warning=FALSE}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Prepare the data to make the animation
+plot_election_data <- function(election_year, shapefile_key, ucla_shapefiles, president_1976_2020) {
+  
+  # Load appropriate shapefile for districts
+  CD <- ucla_shapefiles[[shapefile_key]]
+  
+  # Create electoral college votes column
+  CD_EC <- CD %>%
+    mutate(STATENAME = toupper(STATENAME)) %>%
+    select(-geometry) %>%
+    as.data.frame() %>%
+    group_by(STATENAME) %>%
+    summarize(EC = n() + 2) 
+  
+  # Filter election data for the specified year and determine the winning party per state
+  election_data_year <- president_1976_2020 %>%
+    filter(year == election_year) %>%
+    group_by(state) %>%
+    mutate(winning_party = party_simplified[which.max(candidatevotes)]) %>%
+    slice_max(candidatevotes, n = 1) %>%
+    ungroup()
+  
+  # join datasets
+  election_EC <- CD_EC %>%
+    left_join(election_data_year, by = c("STATENAME" = "state")) %>%
+    select(state = STATENAME, EC, winning_party, state_fips)
+  
+  # Import shapefiles for states using usmap 
+  us_state_shapefiles <- us_map(regions = "states") %>%
+    mutate(fips = as.integer(fips))
+  
+  # join between election data and state shapefiles
+  merged_data <- election_EC %>%
+    left_join(us_state_shapefiles, by = c("state_fips" = "fips"))
+  
+  # make merged data a valid sf object
+  merged_data_sf <- st_as_sf(merged_data)
+  
+  # Add the year column for animation purposes
+  merged_data_sf <- merged_data_sf %>%
+    mutate(year = election_year)
+  
+  return(merged_data_sf)
+}
+
+# prepare for election years
+prepare_election_data <- function(years, shapefile_keys, ucla_shapefiles, president_1976_2020) {
+  
+  # create a list to store data
+  data_list <- list()
+  
+  # Loop and collect the data for each year
+  for (i in 1:length(years)) {
+    year_data <- plot_election_data(years[i], shapefile_keys[i], ucla_shapefiles, president_1976_2020)
+    
+    # add the data to the list
+    data_list[[i]] <- year_data
+  }
+  
+  # Combine all the data into one data frame
+  combined_data <- bind_rows(data_list)
+  
+  return(combined_data) 
+}
+
+# Define the years for election
+years <- c(1976, 1980, 1984, 1988, 1992, 1996, 2000, 2004, 2008, 2012)
+shapefile_keys <- c("districts094.shp", "districts096.shp", "districts098.shp", "districts100.shp", "districts102.shp", 
+                    "districts104.shp", "districts106.shp", "districts108.shp", "districts110.shp", "districts112.shp")
+
+# Prepare the election data for all years
+prepared_data <- prepare_election_data(years, shapefile_keys, ucla_shapefiles, president_1976_2020)
+
+```
+
+```{r, message=FALSE, warning=FALSE}
+#| code-fold: true
+#| code-summary: "Show the code"
+
+# Now map the animation map
+animate_election_map <- function(years, shapefile_keys, ucla_shapefiles, president_1976_2020, output_gif_path) {
+  
+  # Create an empty list to store the data for each year
+  data_list <- list()
+  
+  # Loop and collect the data for plotting
+  for (i in 1:length(years)) {
+    year_data <- plot_election_data(years[i], shapefile_keys[i], ucla_shapefiles, president_1976_2020)
+    
+    # Add the data to the list
+    data_list[[i]] <- year_data
+  }
+  
+  # Combine all the data into one data frame
+  combined_data <- bind_rows(data_list)  
+  
+  # now make the map
+  animated_plot <- ggplot(data = combined_data) +
+    geom_sf(aes(fill = winning_party, geometry = geom), color = "white", size = 0.2) +  
+    scale_fill_manual(values = c("REPUBLICAN" = "red", "DEMOCRAT" = "blue")) +
+    theme_minimal() +
+    labs(title = "Presidential Election Results", fill = "Winning Party") +
+    theme(legend.position = "bottom") +
+    
+    ggtitle("Presidential Election Results for Year: {closest_state}") + 
+    theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5, vjust = 1)) +
+    
+    transition_states(year, transition_length = 2, state_length = 1, wrap = FALSE) +  
+    ease_aes('linear') + 
+    enter_fade() + exit_fade()
+
+  # Save the animation as a GIF
+  anim_save(output_gif_path, animated_plot, renderer = gifski_renderer())
+}
+
+output_gif_path <- "election_results_animated.gif"
+
+animate_election_map(years, shapefile_keys, ucla_shapefiles, president_1976_2020, output_gif_path)
+
+```
+
+![Election Results](election_results_animated.gif)
 
 ## Comparing the Effects of ECV Allocation Rules
 
