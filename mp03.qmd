@@ -34,7 +34,8 @@ library(knitr)
 library(kableExtra)
 library(formattable)
 library(scales)
-library(DT)
+library(gganimate)
+library(gifski)
 #| code-fold: true
 #| code-summary: "Show the code"
 
@@ -262,6 +263,7 @@ Looking at the table, I noticed that there were many cases in which presidential
 ```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
 #| code-summary: "Show the code"
+
 # Summarize presidential votes for candidates
 presidential_votes <- president_1976_2020 %>%
   filter(party_simplified %in% c("DEMOCRAT", "REPUBLICAN")) %>%
@@ -293,14 +295,41 @@ vote_comparison <- left_join(presidential_votes, congressional_votes,
 vote_comparison_cleaned <- vote_comparison %>%
   filter(!is.na(vote_difference) & vote_difference != 0)
 
-# Create an  DT table
-datatable(vote_comparison_cleaned, 
-          caption = "Comparison of Presidential vs Congressional Votes by State and Year", 
-          colnames = c("Year", "State", "Party", "Presidential Votes", "Congressional Votes", "Vote Difference", "Result"),
-          options = list(pageLength = 10, autoWidth = TRUE)) %>%
-  formatStyle(columns = c("run_ahead"), 
-              backgroundColor = styleEqual(c("Presidential Ahead", "Presidential Behind"), 
-                                           c("lightgreen", "lightcoral")))
+# Create a kable table showing only the first 15 rows
+kable(head(vote_comparison_cleaned, 15), 
+      caption = "Comparison of Presidential vs Congressional Votes by State and Year (First 15 Rows)",
+      col.names = c("Year", "State", "Party", "Presidential Votes", "Congressional Votes", "Vote Difference", "Result"),
+      align = c("c", "c", "c", "r", "r", "r", "c")) %>%
+  kable_styling("striped", full_width = FALSE) %>%
+  column_spec(4, color = ifelse(head(vote_comparison_cleaned, 15)$run_ahead == "Presidential Ahead", "lightgreen", "orange")) %>%
+  column_spec(5, color = ifelse(head(vote_comparison_cleaned, 15)$run_ahead == "Presidential Ahead", "lightgreen", "orange"))
+
+
+```
+
+The bar graph illustrates the difference between presidential and congressional vote totals across election years, highlighting whether the presidential vote was higher or lower than the congressional vote.
+
+
+```{r, message=FALSE, warning=FALSE}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Create the bar graph to show the difference between presidential and congressional votes
+ggplot(vote_comparison_cleaned, aes(x = factor(year), y = vote_difference, fill = run_ahead)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("Presidential Ahead" = "green", "Presidential Behind" = "red")) +
+  labs(
+    title = "Difference Between Presidential and Congressional Votes",
+    subtitle = "Presidential Votes Minus Congressional Votes by Year",
+    x = "Year",
+    y = "Vote Difference",
+    fill = "Result"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 12)
+  )
 ```
 
 ## Importing and Plotting Shape File Data
@@ -449,7 +478,8 @@ ggplot(data = merged_data_sf) +
 
 ## Task 6: Advanced Chloropleth Visualization of Electoral College Results
 
-We can expand our findings beyond the 2000 presidential election to show election results over time from 1976-2020.
+We can expand our findings beyond the 2000 presidential election to show election results over time from 1976-2020. First, using the code below, I generated the individual chloropleth visualizations for each election year.
+
 
 ```{r, message=FALSE, warning=FALSE}
 #| code-fold: true
@@ -636,6 +666,7 @@ ggplot(data = merged_data_sf) +
   theme(legend.position = "bottom", 
         plot.title = element_text(hjust = 0.5, size = 16))
 ```
+
 
 ## Comparing the Effects of ECV Allocation Rules
 
