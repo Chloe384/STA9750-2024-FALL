@@ -351,10 +351,6 @@ bond_data <- fred_bond |>
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
-
-
-#| code-fold: true
-
 # Set working directory and path for saving the file
 dir <- getwd()
 save_path_short_term <- file.path(dir, "short_term_debt.zip")
@@ -384,7 +380,7 @@ td <- tempdir()
 zip_contents_short_term <- unzip(save_path_short_term, exdir = td)
 
 # Read the Excel file from the extracted contents
-fred_short_term_debt <- read_excel(zip_contents_short_term, sheet = 2)
+short_term_debt <- read_excel(zip_contents_short_term, sheet = 2)
 
 
 ```
@@ -397,9 +393,6 @@ Let's first take a look at the wage growth and inflation data sets. Taking a loo
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
-
-#| code-fold: true
-
 # Combine wage growth and inflation data
 inflation_wage <- inner_join(wage_growth_data, inflation_data, by = "observation_date") |>
   arrange(observation_date) |>
@@ -475,7 +468,11 @@ print(summary_table)
 
 **Correlation**: The moderate correlation of 0.46 indicates that while wage growth and inflation are somewhat related, other economic factors play significant roles in influencing each of these metrics. Understanding this relationship can be useful for financial planning, as the purchasing power of wages is directly impacted by inflation.
 
+The graph below depicts the correlation between wage and inflation.
+
 ```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+
 # Plot the relationship between wage growth and inflation rate
 ggplot(inflation_wage, aes(x = inflation_rate, y = wage_growth)) +
   geom_point(color = "blue", alpha = 0.6) +  # Add points
@@ -490,4 +487,74 @@ ggplot(inflation_wage, aes(x = inflation_rate, y = wage_growth)) +
 
 Now, let's explore the correlations between US equity and international equities. 
 
-## Task 5:
+First, combine US equity data with the international equity data.
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+
+# Combine US equity and international equity data
+equity_data <- inner_join(us_equity_data, intl_equity_data, by = "observation_date") |>
+  arrange(observation_date) |>
+  filter(year(observation_date) > 2004)  # Only use data from the last 20 years
+
+# Rename columns to simplify
+equity_data <- equity_data %>%
+  rename(
+    us_equity_return = 'us_equity_index',  # Replace with actual column name for US equity returns
+    international_equity_return = 'intl_equity_index'  # Replace with actual column name for international equity returns
+  )
+```
+
+Then, we plot the US Equity market returns against the International Equity market returns into a scattered plot. Looking at the plot, it looks like there's a positive correlation between the two metrics. This suggests that as the market return for US equity rises, there's a high likely possibility that the International equity's market return will also rise. 
+
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+equity_data |>
+  ggplot(aes(x = us_equity_return,
+             y = international_equity_return)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(title = "US Equity Market Returns vs International Equity Market Returns",
+       x = "US Equity Market Returns",
+       y = "International Equity Market Returns")
+```
+Lastly, let's look at the correlation between bond return and short term debt return. Similar to what we did before, first we will combine the two datasets together to create a scattered plot. 
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+# Combine Bond Return and Short-Term Debt Return datasets by observation_date
+bond_short_term_data <- inner_join(bond_data, short_term_debt, by = "observation_date") |>
+  arrange(observation_date) |>
+  filter(year(observation_date) > 2004)  # Use data from the past 20 years (2005-2024)
+
+# Rename columns for ease of use
+bond_short_term_data <- bond_short_term_data %>%
+  rename(
+    bond_return = 'bond_yield',  # Replace with actual column name for bond returns
+    short_term_debt_return = 'GS2'  # Replace with actual column name for short-term debt returns
+  )
+
+# Calculate the correlation between bond returns and short-term debt returns
+correlation_bond_short_term <- cor(bond_short_term_data$bond_return, bond_short_term_data$short_term_debt_return, use = "complete.obs")
+
+
+# Create the scatter plot to visualize the relationship between bond return and short-term debt return
+ggplot(bond_short_term_data, aes(x = short_term_debt_return, y = bond_return)) +
+  geom_point(color = "green", alpha = 0.6) +  # Add points with transparency
+  geom_smooth(method = "lm", color = "red", se = FALSE) +  # Add a linear regression line without confidence interval
+  theme_minimal() +
+  labs(
+    title = "Relationship Between Bond Return and Short-Term Debt Return",
+    x = "Short-Term Debt Return (2-Year Treasury Yield) (%)",
+    y = "Bond Return (%)"
+  )
+
+print(correlation_bond_short_term)
+```
+
+A correlation of 0.83 implies a strong and positive relationship between bond returns and short-term debt returns. This means that changes in one are typically reflected in changes in the other, and this information is crucial for making informed decisions about investing in these two types of fixed-income instruments. It also suggests that investors can expect similar movements in both asset classes, which could influence decisions about asset allocation and diversification in investment portfolios.
+
+
+## Task 5: 
