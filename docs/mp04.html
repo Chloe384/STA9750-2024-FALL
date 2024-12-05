@@ -235,7 +235,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Bond</li>
 <li>Short-Term</li>
 </ul>
-<p>For each of these data set retrievals, we will be utilizing the functions from the <code>httr2</code> package. First, we will define the URL and set up the respective parameters for the metrics we want to retrieve based on each API’s documentation (<a href="https://www.alphavantage.co/documentation/">AlphaVantage documentation</a> and <a href="https://fred.stlouisfed.org/docs/api/fred/">FRED documentation</a>). Then, after performing the request, we will need to read in the content from the API response.</p>
 <p>Below are the 6 data sets retrieved from either the AlphaVantage or FRED API’s. There are various data sets to choose from for each of these metrics, the choice made is dependent on various factors such as the extent of historical data.</p>
 <section id="wage-growth" class="level4">
 <h4 class="anchored" data-anchor-id="wage-growth">Wage Growth</h4>
@@ -520,7 +519,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="task-4-investigation-and-visualization-of-input-data" class="level2">
 <h2 class="anchored" data-anchor-id="task-4-investigation-and-visualization-of-input-data">Task 4: Investigation and Visualization of Input Data</h2>
 <p>Before beginning our retirement plan comparison analysis, we will do some preliminary exploration analysis on the 6 data sets imported to get familiar with our data. For the purposes of this project and to maintain consistency, we will only use data from the last 20 years (2005-2024).</p>
-<p>Let’s first take a look at the wage growth and inflation data sets. Taking a look at the wage growth and inflation data simultaneously gives us a better understanding of the purchasing power and living standards of each specific time period. Both these metrics will be important for individuals’ financial planning throughout their career.</p>
+<p>Let’s first take a look at the wage growth and inflation data sets.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -718,7 +717,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="task-5-historical-comparison" class="level2">
 <h2 class="anchored" data-anchor-id="task-5-historical-comparison">Task 5: Historical Comparison</h2>
 <p>In this task, we examine the hypothetical scenario of an employee hired by CUNY in 2005 and retiring in October 2024. We compare the total contributions to the Teacher Retirement System (TRS) and the Optional Retirement Plan (ORP) over the employee’s career, from 2005 to 2024. The analysis will highlight the differences in employer and employee contributions, providing insights into the better retirement plan option for the employee.</p>
-<p>Assumptions for the Hypothetical Employee: - The employee is hired at age 40 in January 2005 with a starting salary of $75,000. - The salary grows at an annual rate of 3%. - The employee works for 20 years, retiring at age 60 at the end of October 2024. - Contributions to both retirement plans (TRS and ORP) are calculated based on the salary each year. - Employer contributions are fixed for TRS at 8% and for ORP, at 8% for the first 7 years and 10% thereafter.</p>
+<p>Assumptions for the Hypothetical Employee:</p>
+<ul>
+<li>The employee is hired at age 40 in January 2005 with a starting salary of $75,000.</li>
+<li>The salary grows at an annual rate of 3%. - The employee works for 20 years, retiring at age 60 at the end of October 2024.</li>
+<li>Contributions to both retirement plans (TRS and ORP) are calculated based on the salary each year.</li>
+<li>Employer contributions are fixed for TRS at 8% and for ORP, at 8% for the first 7 years and 10% thereafter.</li>
+</ul>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -1192,7 +1197,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 </div>
 </div>
-<p>Conclusion:</p>
+<p><strong>Conclusion:</strong></p>
 <ul>
 <li>Before 2012, both plans are equally beneficial, with identical contribution amounts.</li>
 <li>After 2011, ORP offers a superior retirement benefit due to the increase in employer contributions. The ORP’s 10% employer contribution outpaces TRS’s stable 8% employer contribution.</li>
@@ -1524,7 +1529,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>                                 Metric    Value
-1            Average Monthly TRS Income 1455.634
+1            Average Monthly TRS Income 1457.244
 2            Average Monthly ORP Income 2315.796
 3 Probability ORP Exhausts Before Death    0.000
 4         Probability ORP Higher Income    1.000</code></pre>

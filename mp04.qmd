@@ -104,8 +104,6 @@ To begin the Monte Carlo analysis, we will need historical data covering the fol
 -   Bond
 -   Short-Term
 
-For each of these data set retrievals, we will be utilizing the functions from the `httr2` package. First, we will define the URL and set up the respective parameters for the metrics we want to retrieve based on each API’s documentation ([AlphaVantage documentation](https://www.alphavantage.co/documentation/) and [FRED documentation](https://fred.stlouisfed.org/docs/api/fred/)). Then, after performing the request, we will need to read in the content from the API response.
-
 Below are the 6 data sets retrieved from either the AlphaVantage or FRED API’s. There are various data sets to choose from for each of these metrics, the choice made is dependent on various factors such as the extent of historical data.
 
 #### Wage Growth
@@ -392,7 +390,7 @@ short_term_debt <- read_excel(zip_contents_short_term, sheet = 2)
 
 Before beginning our retirement plan comparison analysis, we will do some preliminary exploration analysis on the 6 data sets imported to get familiar with our data. For the purposes of this project and to maintain consistency, we will only use data from the last 20 years (2005-2024).
 
-Let's first take a look at the wage growth and inflation data sets. Taking a look at the wage growth and inflation data simultaneously gives us a better understanding of the purchasing power and living standards of each specific time period. Both these metrics will be important for individuals' financial planning throughout their career.
+Let's first take a look at the wage growth and inflation data sets.
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
@@ -563,7 +561,12 @@ A correlation of 0.83 implies a strong and positive relationship between bond re
 
 In this task, we examine the hypothetical scenario of an employee hired by CUNY in 2005 and retiring in October 2024. We compare the total contributions to the Teacher Retirement System (TRS) and the Optional Retirement Plan (ORP) over the employee’s career, from 2005 to 2024. The analysis will highlight the differences in employer and employee contributions, providing insights into the better retirement plan option for the employee.
 
-Assumptions for the Hypothetical Employee: - The employee is hired at age 40 in January 2005 with a starting salary of \$75,000. - The salary grows at an annual rate of 3%. - The employee works for 20 years, retiring at age 60 at the end of October 2024. - Contributions to both retirement plans (TRS and ORP) are calculated based on the salary each year. - Employer contributions are fixed for TRS at 8% and for ORP, at 8% for the first 7 years and 10% thereafter.
+Assumptions for the Hypothetical Employee: 
+
+- The employee is hired at age 40 in January 2005 with a starting salary of $75,000. 
+- The salary grows at an annual rate of 3%. - The employee works for 20 years, retiring at age 60 at the end of October 2024. 
+- Contributions to both retirement plans (TRS and ORP) are calculated based on the salary each year.
+- Employer contributions are fixed for TRS at 8% and for ORP, at 8% for the first 7 years and 10% thereafter.
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
@@ -684,7 +687,7 @@ kable(contributions_data, caption = "Comparison of the Total Contributions over 
       digits = 2, col.names = c("Year", "Total Contributions (TRS)", "Total Contributions (ORP)"))
 ```
 
-Conclusion:
+**Conclusion:**
 
 -   Before 2012, both plans are equally beneficial, with identical contribution amounts.
 -   After 2011, ORP offers a superior retirement benefit due to the increase in employer contributions. The ORP's 10% employer contribution outpaces TRS's stable 8% employer contribution.
@@ -866,6 +869,3 @@ As a financial advisor, here's my recommendation:
 **TRS (Stability)**: Provides stable, inflation-adjusted retirement income. Best for employees near retirement or those who prefer predictable, low-risk benefits.
 
 **ORP (Growth)**: Offers growth potential tied to market performance but comes with risks of variable income and possible depletion of savings. Best for employees with a higher risk tolerance and investment management experience.
-
-
-
