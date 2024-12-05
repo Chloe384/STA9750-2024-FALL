@@ -49,6 +49,8 @@ if(!require("gridExtra")) install.packages("gridExtra")
 if(!require("httr2")) install.packages("httr2")
 if(!require("readxl")) install.packages("readxl")
 if(!require("ggcorrplot")) install.packages("ggcorrplot")
+if(!require("knitr")) install.packages("knitr")
+
 
 # Load packages into R
 
@@ -68,6 +70,7 @@ library(gridExtra)
 library(httr2)
 library(readxl) 
 library(ggcorrplot) 
+library(knitr)
 ```
 
 Next, we will get the API keys and url links from AlphaVantage and FRED.
@@ -557,4 +560,210 @@ print(correlation_bond_short_term)
 A correlation of 0.83 implies a strong and positive relationship between bond returns and short-term debt returns. This means that changes in one are typically reflected in changes in the other, and this information is crucial for making informed decisions about investing in these two types of fixed-income instruments. It also suggests that investors can expect similar movements in both asset classes, which could influence decisions about asset allocation and diversification in investment portfolios.
 
 
-## Task 5: 
+## Task 5: Historical Comparison
+
+In this task, we examine the hypothetical scenario of an employee hired by CUNY in 2005 and retiring in October 2024. We compare the total contributions to the Teacher Retirement System (TRS) and the Optional Retirement Plan (ORP) over the employee’s career, from 2005 to 2024. The analysis will highlight the differences in employer and employee contributions, providing insights into the better retirement plan option for the employee.
+
+Assumptions for the Hypothetical Employee:
+- The employee is hired at age 40 in January 2005 with a starting salary of $75,000.
+- The salary grows at an annual rate of 3%.
+- The employee works for 20 years, retiring at age 60 at the end of October 2024.
+- Contributions to both retirement plans (TRS and ORP) are calculated based on the salary each year.
+- Employer contributions are fixed for TRS at 8% and for ORP, at 8% for the first 7 years and 10% thereafter.
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+
+# Set initial parameters
+starting_salary <- 75000  # Starting salary for the hypothetical employee
+salary_growth_rate <- 0.03  # Annual salary growth rate of 3%
+years_worked <- 20  # Number of years worked (2005 to 2024)
+retirement_age <- 60  # Age at retirement
+
+# Function to calculate employee and employer contributions for TRS and ORP
+calculate_contributions <- function(starting_salary, salary_growth_rate, years_worked) {
+  # Initialize vectors to store the data
+  salary <- numeric(years_worked)
+  employee_contrib_trs <- numeric(years_worked)
+  employer_contrib_trs <- numeric(years_worked)
+  employee_contrib_orp <- numeric(years_worked)
+  employer_contrib_orp <- numeric(years_worked)
+  total_contrib_orp <- numeric(years_worked)
+  total_contrib_trs <- numeric(years_worked)
+  age <- numeric(years_worked)
+  
+  # Loop through each year to calculate the data
+  for (i in 1:years_worked) {
+    current_salary <- starting_salary * (1 + salary_growth_rate)^(i-1)
+    age[i] <- 35 + i  # Age starts at 35 and increases by 1 each year
+    
+    # TRS Contributions (based on salary)
+    if (current_salary <= 45000) {
+      employee_contrib_trs[i] <- current_salary * 0.03
+    } else if (current_salary <= 55000) {
+      employee_contrib_trs[i] <- current_salary * 0.035
+    } else if (current_salary <= 75000) {
+      employee_contrib_trs[i] <- current_salary * 0.045
+    } else if (current_salary <= 100000) {
+      employee_contrib_trs[i] <- current_salary * 0.0575
+    } else {
+      employee_contrib_trs[i] <- current_salary * 0.06
+    }
+    
+    # Employer Contributions for TRS (Fixed 8% for simplicity, adjust if more info is available)
+    employer_contrib_trs[i] <- current_salary * 0.08
+    
+    # ORP Contributions (Employee contribution is similar to TRS)
+    employee_contrib_orp[i] <- employee_contrib_trs[i]  # Same contribution rate as TRS
+    
+    # Employer Contributions for ORP (8% for first 7 years, 10% thereafter)
+    if (i <= 7) {
+      employer_contrib_orp[i] <- current_salary * 0.08
+    } else {
+      employer_contrib_orp[i] <- current_salary * 0.10
+    }
+    
+    # Total Contributions for ORP
+    total_contrib_orp[i] <- employee_contrib_orp[i] + employer_contrib_orp[i]
+    
+    # Total Contributions for TRS (assuming no investment returns for simplicity)
+    total_contrib_trs[i] <- employee_contrib_trs[i] + employer_contrib_trs[i]
+    
+    # Save salary value
+    salary[i] <- current_salary
+  }
+  
+  # Create a data frame with all the calculated data
+  contributions_data <- data.frame(
+    Year = 2005 + 0:(years_worked-1),
+    Salary = salary,
+    `Employee Contributions (TRS)` = employee_contrib_trs,
+    `Employer Contributions (TRS)` = employer_contrib_trs,
+    `Total Contributions (TRS)` = total_contrib_trs,
+    `Employee Contributions (ORP)` = employee_contrib_orp,
+    `Employer Contributions (ORP)` = employer_contrib_orp,
+    `Total Contributions (ORP)` = total_contrib_orp,
+    Age = age
+  )
+  
+  return(contributions_data)
+}
+
+# Calculate the contributions
+contributions_data <- calculate_contributions(starting_salary, salary_growth_rate, years_worked)
+
+# Create a comparison table using kable
+kable(contributions_data, 
+      col.names = c("Year", "Salary After Adjustments", "Employee Contributions (TRS)", 
+                    "Employer Contributions (TRS)", "Total Contributions (TRS)", 
+                    "Employee Contributions (ORP)", "Employer Contributions (ORP)", 
+                    "Total Contributions (ORP)", "Age"),
+      caption = "ORP Employee and Employer Yearly Contributions",
+      format = "html",
+      digits = 2,
+      align = c("l", "r", "r", "r", "r", "r", "r", "r", "r"))  # Align columns to the right
+
+
+
+```
+
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+# Load the necessary library for creating the table
+library(knitr)
+
+# Create the data frame for total contributions over time
+contributions_data <- data.frame(
+  Year = 2005:2024,
+  `Total Contributions (TRS)` = c(9375.00, 10621.88, 10940.53, 11268.75, 11606.81, 
+                                  11955.01, 12313.66, 12683.07, 13063.57, 13455.47,
+                                  14111.12, 14534.46, 14970.49, 15419.60, 15882.19, 
+                                  16358.66, 16849.42, 17354.90, 17875.55, 18411.81),
+  `Total Contributions (ORP)` = c(9375.00, 10621.88, 10940.53, 11268.75, 11606.81, 
+                                  11955.01, 12313.66, 14527.89, 14963.72, 15412.63, 
+                                  16127.00, 16610.81, 17109.13, 17622.40, 18151.08,
+                                  18695.61, 19256.48, 19834.17, 20429.20, 21042.07)
+)
+
+# Display the table using kable
+kable(contributions_data, caption = "Comparison of the Total Contributions over Time (2005 to 2024)", 
+      digits = 2, col.names = c("Year", "Total Contributions (TRS)", "Total Contributions (ORP)"))
+```
+
+Conclusion:
+
+- Before 2012, both plans are equally beneficial, with identical contribution amounts.
+- After 2011, ORP offers a superior retirement benefit due to the increase in employer contributions. The ORP's 10% employer contribution outpaces TRS's stable 8% employer contribution.
+- The gap between ORP and TRS contributions continues to grow each year as the salary increases, making ORP the better plan for employees in terms of total retirement contributions, especially for those with higher salaries or longer service years.
+
+## Task 6: Fixed Rate Analysis
+
+In this task, we will project an employee's pension benefit (for TRS) and withdrawal amounts (for ORP) from retirement until death. We will use the assumptions from the previous section to estimate the fixed-rate retirement benefits for both plans and compare them over the employee's retirement lifespan.
+
+Key Assumptions:
+
+- The employee retires in October 2024 at age 60.
+- The employee is expected to live until age 88, which gives them 28 years of retirement.
+- Pension Benefit is based on a fixed formula that guarantees monthly payments for life.
+- The TRS retirement benefit increases with a Cost-of-Living Adjustment (COLA) of 2% per year, based on historical averages.
+
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+# Set parameters for simulation
+starting_salary <- 75000  # Starting salary for the hypothetical employee
+salary_growth_rate <- 0.03  # Annual salary growth rate of 3%
+years_worked <- 20  # Number of years worked (2005 to 2024)
+retirement_age <- 60  # Age at retirement
+death_age <- 88  # Age at death
+
+# Assuming the total contributions in 2024 are equal for both TRS and ORP
+total_contrib_2024 <- 21042.07  # Based on the total contribution for 2024 (from ORP)
+COLA_rate <- 0.02  # Cost-of-living adjustment for TRS
+investment_return_rate <- 0.05  # Average market return rate for ORP
+retirement_years <- death_age - retirement_age  # Number of retirement years
+
+# Function to simulate TRS and ORP benefits over retirement period
+simulate_retirement_benefits <- function(total_contrib_2024, COLA_rate, investment_return_rate, retirement_years) {
+  # Initialize vectors to store the pension/withdrawal values over time
+  trs_pension <- numeric(retirement_years)
+  orp_balance <- numeric(retirement_years)
+  orp_withdrawals <- numeric(retirement_years)
+  
+  # TRS pension benefit starts with the total contribution in the final year, increases by COLA every year
+  trs_pension[1] <- total_contrib_2024 / 12  # Monthly pension based on total contributions divided by 12 months
+  for (i in 2:retirement_years) {
+    trs_pension[i] <- trs_pension[i-1] * (1 + COLA_rate)  # Apply COLA increase every year
+  }
+  
+  # ORP balance grows at the investment rate, and monthly withdrawals are calculated
+  orp_balance[1] <- total_contrib_2024  # Initial balance in ORP
+  monthly_withdrawal_orp <- orp_balance[1] * 0.05 / 12  # Assumption: ORP withdrawals are based on a 5% annual return
+  
+  for (i in 1:retirement_years) {
+    if (i > 1) {
+      # Apply 5% return to the ORP balance before withdrawal
+      orp_balance[i] <- orp_balance[i-1] * (1 + investment_return_rate)
+    }
+    # Withdraw fixed monthly amount from ORP
+    orp_withdrawals[i] <- monthly_withdrawal_orp
+  }
+  
+  # Return the pension and ORP withdrawal data
+  return(data.frame(
+    Year = retirement_age:(death_age - 1),
+    TRS_Pension = trs_pension,
+    ORP_Withdrawals = orp_withdrawals
+  ))
+}
+
+# Simulate the benefits for both TRS and ORP
+retirement_benefits <- simulate_retirement_benefits(total_contrib_2024, COLA_rate, investment_return_rate, retirement_years)
+
+# Display the table comparing TRS vs ORP over retirement
+kable(retirement_benefits, 
+      col.names = c("Year", "TRS Pension (Monthly)", "ORP Withdrawals (Monthly)"),
+      caption = "Monthly Income Comparison: TRS vs ORP (2005-2024)",
+      format = "html", digits = 2, align = c("l", "r", "r"))
+```
