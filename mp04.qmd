@@ -1,0 +1,493 @@
+# Mini Project #04: Monte Carlo-Informed Selection of CUNY Retirement Plans
+
+In this mini-project, the goal is to use Monte Carlo simulations to evaluate and inform the selection of a retirement plan based on various financial data. The code provided fetches historical data from multiple sources, including AlphaVantage and FRED, which is then used to model the performance of different asset classes. Here's an explanation of the key components of the code.
+
+## Introduction
+
+At the [City University of New York (CUNY)](https://www.cuny.edu/), new faculty members must decide between [two retirement plans](https://www.cuny.edu/wp-content/uploads/sites/4/page-assets/about/administration/offices/hr/benefits/Benefits-Guide-Retirement-Plans-Final-HEO-and-ECP.pdf) within 30 days. Given the long-term impact and significance of this decision, it is essential that they carefully weigh their options, as this choice will shape their financial security throughout retirement.
+
+## CUNY Retirement Plans
+
+The City University of New York (CUNY) provides its employees with a choice between two retirement plans: the traditional, defined-benefit Teachers Retirement System (TRS) plan, and the newer, defined-contribution Optional Retirement Plan (ORP).
+
+### Teachers Retirement System
+
+The Teachers Retirement System (TRS) is a traditional, defined-benefit plan that guarantees employees a set monthly benefit upon retirement, based on factors like salary and years of service.
+
+### Optional Retirement Plan
+
+In contrast, the Optional Retirement Plan (ORP) operates as a defined-contribution plan, where both employees and employers make contributions to individual investment accounts. The retirement benefits are determined by the performance of these investments.
+
+This project aims to utilize historical financial data along with a bootstrap inference method to assess the two retirement plans available at CUNY, providing data-driven insights for employees’ retirement planning.
+
+For this analysis, we will use  data from two primary financial and economic sources: AlphaVantage and the Federal Reserve Economic Data (FRED) repository. AlphaVantage is a commercial data provider offering APIs that deliver both real-time and historical stock market data. The FRED repository, managed by the Federal Reserve Bank of St. Louis, grants access to an extensive range of economic data and financial metrics.
+
+## Data Sources
+
+For this project, we will be accessing data from both AlphaVantage and FRED through their password-protected APIs. Before accessing these APIs, we will need to register for API keys for each of the respective APIs: [AlphaVantage registration](https://www.alphavantage.co/support/#api-key) and [FRED registration](https://fredaccount.stlouisfed.org/login/secure/).
+
+First, we will begin with importing all the necessary libraries required for this project.
+
+```{r echo = TRUE, results = "hide", message = FALSE, warning = FALSE}
+#| code-fold: true
+
+# Install necessary packages
+
+if(!require("dplyr")) install.packages("dplyr")
+if(!require("tidyverse")) install.packages("tidyverse")
+if(!require("sf")) install.packages("sf")
+if(!require("haven")) install.packages("haven")
+if(!require("DT")) install.packages("DT")
+if(!require("gt")) install.packages("gt")
+if(!require("ggplot2")) install.packages("ggplot2")
+if(!require("RColorBrewer")) install.packages("RColorBrewer")
+if(!require("stringr")) install.packages("stringr")
+if(!require("patchwork")) install.packages("patchwork")
+if(!require("gganimate")) install.packages("gganimate")
+if(!require("zoom")) install.packages("zoom")
+if(!require("gridExtra")) install.packages("gridExtra")
+if(!require("httr2")) install.packages("httr2")
+if(!require("readxl")) install.packages("readxl")
+if(!require("ggcorrplot")) install.packages("ggcorrplot")
+
+# Load packages into R
+
+library(dplyr)
+library(tidyverse)
+library(sf)
+library(haven)
+library(DT)
+library(gt)
+library(ggplot2)
+library(RColorBrewer) 
+library(stringr)
+library(patchwork) 
+library(gganimate)
+library(zoom)
+library(gridExtra) 
+library(httr2)
+library(readxl) 
+library(ggcorrplot) 
+```
+
+Next, we will get the API keys and url links from AlphaVantage and FRED.
+
+## Task 1: Register for AlphaVantage API Key
+
+```{r echo = TRUE, results = "hide", message = FALSE, warning = FALSE}
+#| code-fold: true
+
+apikey <- readLines("C:/Users/zhuol/OneDrive/Documents/STA9750-2024-FALL/API Key")
+ALPHAVANTAGE_URL <- "https://www.alphavantage.co/query"
+
+```
+
+## Task 2: Register for FRED API Key
+
+```{r echo = TRUE, results = "hide", message = FALSE, warning = FALSE}
+#| code-fold: true
+FRED_URL <- "https://api.stlouisfed.org/fred/series/observations"
+fredkey <- readLines("C:/Users/zhuol/OneDrive/Documents/STA9750-2024-FALL/FRED Key")
+```
+
+## Data Acquisition
+
+To begin the Monte Carlo analysis, we will need historical data covering the following:
+
+-   Wage Growth
+-   Inflation
+-   US Equities
+-   International Equities
+-   Bond
+-   Short-Term
+
+For each of these data set retrievals, we will be utilizing the functions from the `httr2` package. First, we will define the URL and set up the respective parameters for the metrics we want to retrieve based on each API’s documentation ([AlphaVantage documentation](https://www.alphavantage.co/documentation/) and [FRED documentation](https://fred.stlouisfed.org/docs/api/fred/)). Then, after performing the request, we will need to read in the content from the API response.
+
+Below are the 6 data sets retrieved from either the AlphaVantage or FRED API’s. There are various data sets to choose from for each of these metrics, the choice made is dependent on various factors such as the extent of historical data.
+
+#### Wage Growth
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+
+# Set working directory and path for saving the file
+dir <- getwd()
+save_path_wage <- file.path(dir, "wage.zip")
+
+# Check if the file doesn't exist locally and download it if necessary
+if (!file.exists(save_path_wage)) {
+  # Request data from FRED API for wage data
+  fred_req_wage <- request("https://api.stlouisfed.org/fred/series/observations") |>
+    req_url_query(
+      series_id = "FRBATLWGT3MMAUMHWGWSFT",  # Series ID for wage data
+      api_key = fredkey,                # FRED API key
+      file_type = "xls"                      # Specify Excel file type
+    )
+  
+  # Perform the request and save the response as a raw file
+  fred_resp_wage <- fred_req_wage |>
+    req_perform()
+  
+  # Save the raw data to the specified file path
+  fred_resp_wage |>
+    resp_body_raw() |>
+    writeBin(save_path_wage)
+}
+
+# Define temporary directory and extract the contents of the ZIP file
+td <- tempdir()
+zip_contents_wage <- unzip(save_path_wage, exdir = td)
+
+# Read the Excel file from the extracted contents
+fred_wage <- read_excel(zip_contents_wage, sheet = 2)
+
+wage_growth_data <- fred_wage |>
+  select(c('observation_date', 'FRBATLWGT3MMAUMHWGWSFT')) |>
+  rename(wage_growth = 'FRBATLWGT3MMAUMHWGWSFT') # annualized median wage growth rate
+
+```
+
+#### Inflation
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+
+# Set working directory and path for saving the file
+dir <- getwd()
+save_path_inflation <- file.path(dir, "inflation.zip")
+
+# Check if the file doesn't exist locally and download it if necessary
+if (!file.exists(save_path_inflation)) {
+  # Request data from FRED API for inflation data (CPI)
+  fred_req_inflation <- request("https://api.stlouisfed.org/fred/series/observations") |>
+    req_url_query(
+      series_id = "FPCPITOTLZGUSA",  # Series ID for CPI (Consumer Price Index)
+      api_key = fredkey,              # FRED API key
+      file_type = "xls"               # Specify Excel file type
+    )
+  
+  # Perform the request and save the response as a raw file
+  fred_resp_inflation <- fred_req_inflation |>
+    req_perform()
+  
+  # Save the raw data to the specified file path
+  fred_resp_inflation |>
+    resp_body_raw() |>
+    writeBin(save_path_inflation)
+}
+
+# Define temporary directory and extract the contents of the ZIP file
+td <- tempdir()
+zip_contents_inflation <- unzip(save_path_inflation, exdir = td)
+
+# Read the Excel file from the extracted contents
+fred_inflation <- read_excel(zip_contents_inflation, sheet = 2)
+
+# Select and clean the data for inflation rate calculation
+inflation_data <- fred_inflation |>
+  select(c('observation_date', 'FPCPITOTLZGUSA')) |>
+  rename(inflation_rate = 'FPCPITOTLZGUSA')  # Rename CPI column to 'inflation_rate'
+
+# Optionally: Convert the data to date format and process inflation growth
+inflation_data <- inflation_data |>
+  mutate(
+    observation_date = as.Date(observation_date),
+    inflation_growth = (inflation_rate / lag(inflation_rate) - 1) * 100  # Calculate the period-to-period growth rate
+  ) %>%
+  drop_na()  # Drop NA values for calculations
+```
+
+#### US Equity Market Returns
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+library(httr)
+# Request monthly adjusted data for SPY (U.S. Equity Market)
+spy_file <- request(ALPHAVANTAGE_URL) |>
+  req_url_path("query") |>
+  req_url_query(
+    `function` = "TIME_SERIES_MONTHLY",  # Request monthly time series data
+    apikey = apikey,                     # AlphaVantage API key
+    datatype = "csv",                    # Data format as CSV
+    symbol = "SPY"                       # Symbol for the Vanguard Total Stock Market ETF
+  ) |>
+  req_perform()
+
+# Read the CSV data for SPY (U.S. Equity Market)
+spy_data <- read_csv(resp_body_string(spy_file))
+
+
+```
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+
+# Set working directory and path for saving the file
+dir <- getwd()
+save_path_us_equity <- file.path(dir, "us_equity.zip")
+
+# Check if the file doesn't exist locally and download it if necessary
+if (!file.exists(save_path_us_equity)) {
+  # Request data from FRED API for US Equities (S&P 500 Index)
+  fred_req_us_equity <- request("https://api.stlouisfed.org/fred/series/observations") |>
+    req_url_query(
+      series_id = "SP500",  # Series ID for S&P 500 Index
+      api_key = fredkey,    # FRED API key
+      file_type = "xls"     # Specify Excel file type
+    )
+  
+  # Perform the request and save the response as a raw file
+  fred_resp_us_equity <- fred_req_us_equity |>
+    req_perform()
+  
+  # Save the raw data to the specified file path
+  fred_resp_us_equity |>
+    resp_body_raw() |>
+    writeBin(save_path_us_equity)
+}
+
+# Define temporary directory and extract the contents of the ZIP file
+td <- tempdir()
+zip_contents_us_equity <- unzip(save_path_us_equity, exdir = td)
+
+# Read the Excel file from the extracted contents
+fred_us_equity <- read_excel(zip_contents_us_equity, sheet = 2)
+
+# Select and clean the data for US Equities
+us_equity_data <- fred_us_equity |>
+  select(c('observation_date', 'SP500')) |>
+  rename(us_equity_index = 'SP500')  # Rename column for clarity
+
+```
+
+#### International Equity Market Returns
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+
+# Set working directory and path for saving the file
+dir <- getwd()
+save_path_intl_equity <- file.path(dir, "intl_equity.zip")
+
+# Check if the file doesn't exist locally and download it if necessary
+if (!file.exists(save_path_intl_equity)) {
+  # Request data from FRED API for International Equities
+  fred_req_intl_equity <- request("https://api.stlouisfed.org/fred/series/observations") |>
+    req_url_query(
+      series_id = "IR14270",  # Series ID for World Stock Market Capitalization (Non-US)
+      api_key = fredkey,      # FRED API key
+      file_type = "xls"       # Specify Excel file type
+    )
+  
+  # Perform the request and save the response as a raw file
+  fred_resp_intl_equity <- fred_req_intl_equity |>
+    req_perform()
+  
+  # Save the raw data to the specified file path
+  fred_resp_intl_equity |>
+    resp_body_raw() |>
+    writeBin(save_path_intl_equity)
+}
+
+# Define temporary directory and extract the contents of the ZIP file
+td <- tempdir()
+zip_contents_intl_equity <- unzip(save_path_intl_equity, exdir = td)
+
+# Read the Excel file from the extracted contents
+fred_intl_equity <- read_excel(zip_contents_intl_equity, sheet = 2)
+
+# Select and clean the data for International Equities
+intl_equity_data <- fred_intl_equity |>
+  select(c('observation_date', 'IR14270')) |>
+  rename(intl_equity_index = 'IR14270')  # Rename column for clarity
+
+```
+
+#### Bond market returns
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+
+# Set working directory and path for saving the file
+dir <- getwd()
+save_path_bond <- file.path(dir, "bond.zip")
+
+# Check if the file doesn't exist locally and download it if necessary
+if (!file.exists(save_path_bond)) {
+  # Request data from FRED API for 10-year treasury bond yields
+  fred_req_bond <- request("https://api.stlouisfed.org/fred/series/observations") |>
+    req_url_query(
+      series_id = "GS10",  # Series ID for 10-year treasury yield
+      api_key = fredkey,    # FRED API key
+      file_type = "xls"     # Specify Excel file type
+    )
+  
+  # Perform the request and save the response as a raw file
+  fred_resp_bond <- fred_req_bond |>
+    req_perform()
+  
+  # Save the raw data to the specified file path
+  fred_resp_bond |>
+    resp_body_raw() |>
+    writeBin(save_path_bond)
+}
+
+# Define temporary directory and extract the contents of the ZIP file
+td <- tempdir()
+zip_contents_bond <- unzip(save_path_bond, exdir = td)
+
+# Read the Excel file from the extracted contents
+fred_bond <- read_excel(zip_contents_bond, sheet = 2)
+
+# Select and clean the data for bond market returns
+bond_data <- fred_bond |>
+  select(c('observation_date', 'GS10')) |>
+  rename(bond_yield = 'GS10')  # Rename column for clarity
+
+
+```
+
+#### Short-Term Debt Returns
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+
+
+#| code-fold: true
+
+# Set working directory and path for saving the file
+dir <- getwd()
+save_path_short_term <- file.path(dir, "short_term_debt.zip")
+
+# Check if the file doesn't exist locally and download it if necessary
+if (!file.exists(save_path_short_term)) {
+  # Request data from FRED API for Short-Term Debt (2-Year Treasury Yield)
+  fred_req_short_term <- request("https://api.stlouisfed.org/fred/series/observations") |>
+    req_url_query(
+      series_id = "GS2",  # Series ID for 2-Year Treasury Yield
+      api_key = fredkey,   # FRED API key
+      file_type = "xls"    # Specify Excel file type
+    )
+  
+  # Perform the request and save the response as a raw file
+  fred_resp_short_term <- fred_req_short_term |>
+    req_perform()
+  
+  # Save the raw data to the specified file path
+  fred_resp_short_term |>
+    resp_body_raw() |>
+    writeBin(save_path_short_term)
+}
+
+# Define temporary directory and extract the contents of the ZIP file
+td <- tempdir()
+zip_contents_short_term <- unzip(save_path_short_term, exdir = td)
+
+# Read the Excel file from the extracted contents
+fred_short_term_debt <- read_excel(zip_contents_short_term, sheet = 2)
+
+
+```
+
+## Task 4: Investigation and Visualization of Input Data
+
+Before beginning our retirement plan comparison analysis, we will do some preliminary exploration analysis on the 6 data sets imported to get familiar with our data. For the purposes of this project and to maintain consistency, we will only use data from the last 20 years (2005-2024).
+
+Let's first take a look at the wage growth and inflation data sets. Taking a look at the wage growth and inflation data simultaneously gives us a better understanding of the purchasing power and living standards of each specific time period. Both these metrics will be important for individuals' financial planning throughout their career.
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+
+#| code-fold: true
+
+# Combine wage growth and inflation data
+inflation_wage <- inner_join(wage_growth_data, inflation_data, by = "observation_date") |>
+  arrange(observation_date) |>
+  # Calculate monthly inflation if not directly available; otherwise, use the inflation_rate column if available
+  mutate(inflation = round((inflation_rate - lag(inflation_rate)) / lag(inflation_rate) * 100, 2)) |>
+  drop_na() |>
+  filter(year(observation_date) > 2004)  # Only use data from the past 20 years
+
+```
+
+The following graph shows the change in wage growth and inflation rates over time from 2005 to 2024. 
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+
+ggplot(inflation_wage, aes(x = observation_date)) +
+  geom_line(aes(y = inflation_rate, color = "Inflation"), size = 1.2) +  # Inflation line
+  geom_line(aes(y = wage_growth, color = "Wage Growth"), size = 1.2) +  # Wage Growth line
+  scale_color_manual(values = c("Inflation" = "blue", "Wage Growth" = "red")) +  # Custom colors for the lines
+  labs(title = "Inflation and Wage Growth Over Time",
+       x = "Date",
+       y = "Rate (%)",
+       color = "Legend") +
+  theme_minimal() +  # Clean and simple theme
+  theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),  # Title customization
+        axis.title = element_text(size = 12),  # Axis titles customization
+        axis.text = element_text(size = 10),  # Axis labels customization
+        legend.position = "top")  # Place the legend at the top
+
+```
+
+In addition, I want to measure the correlation of factors such as averages and variances for wage and inflation.
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+
+# Calculate long-term averages (mean) and variances for wage growth and inflation
+wage_inflation_stats <- inflation_wage %>%
+  summarise(
+    avg_wage_growth = mean(wage_growth, na.rm = TRUE),
+    var_wage_growth = var(wage_growth, na.rm = TRUE),
+    avg_inflation_rate = mean(inflation_rate, na.rm = TRUE),
+    var_inflation_rate = var(inflation_rate, na.rm = TRUE)
+  )
+
+# Calculate correlation between wage growth and inflation
+correlation <- cor(inflation_wage$wage_growth, inflation_wage$inflation_rate, use = "complete.obs")
+
+# Create a summary table for wage growth and inflation
+summary_table <- data.frame(
+  Metric = c("Wage Growth (Avg)", "Wage Growth (Variance)", "Inflation Rate (Avg)", "Inflation Rate (Variance)", "Correlation"),
+  Value = c(
+    round(wage_inflation_stats$avg_wage_growth, 2),
+    round(wage_inflation_stats$var_wage_growth, 2),
+    round(wage_inflation_stats$avg_inflation_rate, 2),
+    round(wage_inflation_stats$var_inflation_rate, 2),
+    round(correlation, 2)
+  )
+)
+
+# Print the summary table
+print(summary_table)
+
+```
+
+**Average Wage Growth**: Wage growth is an important indicator for economic well-being. If wage growth outpaces inflation, it suggests that workers' purchasing power is increasing. In this case, an average of 3.52% suggests moderate wage improvements over the observed period.
+
+**Variance of Wage Growth**: A variance of 1.19 indicates some variability in the wage growth rates, but it's relatively moderate compared to other economic factors. It suggests that while wages generally grew over time, the pace of growth was not consistent year after year. This could be due to external factors like economic recessions, inflationary shocks, or changes in labor market conditions.
+
+**Average Inflation Rate**: An average inflation rate of 2.56% is relatively moderate. Typically, central banks target an inflation rate of around 2%, so this figure suggests a fairly stable price environment. A moderate inflation rate like this usually allows for economic growth while avoiding the negative effects of both high inflation (which erodes purchasing power) and deflation (which can stifle economic activity).
+
+**Variance of Inflation rate**: A variance of 3.43 suggests periods of significant inflationary volatility, possibly due to external economic shocks (e.g., energy price fluctuations, supply chain disruptions) or changing economic conditions (e.g., fiscal policy, demand shocks). This can be more concerning because high variability in inflation can make it harder for consumers and businesses to plan financially.
+
+**Correlation**: The moderate correlation of 0.46 indicates that while wage growth and inflation are somewhat related, other economic factors play significant roles in influencing each of these metrics. Understanding this relationship can be useful for financial planning, as the purchasing power of wages is directly impacted by inflation.
+
+```{r, message = FALSE, warning = FALSE}
+# Plot the relationship between wage growth and inflation rate
+ggplot(inflation_wage, aes(x = inflation_rate, y = wage_growth)) +
+  geom_point(color = "blue", alpha = 0.6) +  # Add points
+  geom_smooth(method = "lm", color = "red", se = FALSE) +  # Add a linear regression line
+  theme_minimal() +
+  labs(
+    title = "Relationship Between Wage Growth and Inflation Rate",
+    x = "Inflation Rate (%)",
+    y = "Wage Growth (%)"
+  )
+```
+
+Now, let's explore the correlations between US equity and international equities. 
+
+## Task 5:
