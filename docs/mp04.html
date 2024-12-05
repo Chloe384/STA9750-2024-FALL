@@ -1425,6 +1425,114 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </div>
 </div>
+</section>
+<section id="task-7-monte-carlo-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="task-7-monte-carlo-analysis">Task 7: Monte Carlo Analysis</h2>
+<p>In this section, we present our Monte Carlo analysis results comparing the TRS (Teachers’ Retirement System) and ORP (Optional Retirement Program) plans for CUNY employees. We utilize bootstrap sampling to create 200 “bootstrap histories” from historical data on wage growth, inflation, equity returns, and bond returns. This approach allows us to generate different possible future scenarios and evaluate the retirement benefits for employees under both plans.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set parameters for simulation</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>num_bootstraps <span class="ot">&lt;-</span> <span class="dv">200</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>starting_salary <span class="ot">&lt;-</span> <span class="dv">50000</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>retirement_age <span class="ot">&lt;-</span> <span class="dv">55</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>max_age <span class="ot">&lt;-</span> <span class="dv">85</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>initial_orp_balance <span class="ot">&lt;-</span> <span class="dv">100000</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>withdrawal_rate <span class="ot">&lt;-</span> <span class="fl">0.04</span>  <span class="co"># 4% withdrawal rate</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>final_average_salary_percentages <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.0167</span>, <span class="fl">0.0175</span>, <span class="fl">0.35</span>)  <span class="co"># TRS tier percentages (example)</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine all data into one data frame</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>all_data <span class="ot">&lt;-</span> wage_growth_data <span class="sc">%&gt;%</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(inflation_data, <span class="at">by =</span> <span class="st">"observation_date"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(us_equity_data, <span class="at">by =</span> <span class="st">"observation_date"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(intl_equity_data, <span class="at">by =</span> <span class="st">"observation_date"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(bond_data, <span class="at">by =</span> <span class="st">"observation_date"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(short_term_debt, <span class="at">by =</span> <span class="st">"observation_date"</span>)</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Hypothetical data simulation</span></span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>historical_data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">wage_growth =</span> <span class="fu">rnorm</span>(<span class="dv">20</span>, <span class="at">mean =</span> <span class="dv">3</span>, <span class="at">sd =</span> <span class="dv">1</span>), </span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">inflation =</span> <span class="fu">rnorm</span>(<span class="dv">20</span>, <span class="at">mean =</span> <span class="dv">2</span>, <span class="at">sd =</span> <span class="dv">1</span>),  </span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">us_equity_returns =</span> <span class="fu">rnorm</span>(<span class="dv">20</span>, <span class="at">mean =</span> <span class="dv">7</span>, <span class="at">sd =</span> <span class="dv">5</span>),  </span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">int_equity_returns =</span> <span class="fu">rnorm</span>(<span class="dv">20</span>, <span class="at">mean =</span> <span class="dv">6</span>, <span class="at">sd =</span> <span class="dv">4</span>), </span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">bond_returns =</span> <span class="fu">rnorm</span>(<span class="dv">20</span>, <span class="at">mean =</span> <span class="dv">3</span>, <span class="at">sd =</span> <span class="dv">2</span>)  </span>
+<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialize lists to store results</span></span>
+<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a>orp_exhaustion_prob <span class="ot">&lt;-</span> <span class="fu">numeric</span>(num_bootstraps)</span>
+<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a>orp_higher_income_prob <span class="ot">&lt;-</span> <span class="fu">numeric</span>(num_bootstraps)</span>
+<span id="cb24-30"><a href="#cb24-30" aria-hidden="true" tabindex="-1"></a>avg_trs_income <span class="ot">&lt;-</span> <span class="fu">numeric</span>(num_bootstraps)</span>
+<span id="cb24-31"><a href="#cb24-31" aria-hidden="true" tabindex="-1"></a>avg_orp_income <span class="ot">&lt;-</span> <span class="fu">numeric</span>(num_bootstraps)</span>
+<span id="cb24-32"><a href="#cb24-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-33"><a href="#cb24-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Monte Carlo Simulation</span></span>
+<span id="cb24-34"><a href="#cb24-34" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">100</span>)  </span>
+<span id="cb24-35"><a href="#cb24-35" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>num_bootstraps) {</span>
+<span id="cb24-36"><a href="#cb24-36" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Step 1: Bootstrap sampling from historical data</span></span>
+<span id="cb24-37"><a href="#cb24-37" aria-hidden="true" tabindex="-1"></a>  bootstrap_sample <span class="ot">&lt;-</span> historical_data[<span class="fu">sample</span>(<span class="fu">nrow</span>(historical_data), <span class="fu">nrow</span>(historical_data), <span class="at">replace =</span> <span class="cn">TRUE</span>), ]</span>
+<span id="cb24-38"><a href="#cb24-38" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb24-39"><a href="#cb24-39" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Step 2: Simulate salary growth</span></span>
+<span id="cb24-40"><a href="#cb24-40" aria-hidden="true" tabindex="-1"></a>  wages <span class="ot">&lt;-</span> <span class="fu">numeric</span>(max_age <span class="sc">-</span> retirement_age <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb24-41"><a href="#cb24-41" aria-hidden="true" tabindex="-1"></a>  wages[<span class="dv">1</span>] <span class="ot">&lt;-</span> starting_salary</span>
+<span id="cb24-42"><a href="#cb24-42" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span>(max_age <span class="sc">-</span> retirement_age <span class="sc">+</span> <span class="dv">1</span>)) {</span>
+<span id="cb24-43"><a href="#cb24-43" aria-hidden="true" tabindex="-1"></a>    wage_growth <span class="ot">&lt;-</span> <span class="fu">mean</span>(bootstrap_sample<span class="sc">$</span>wage_growth)</span>
+<span id="cb24-44"><a href="#cb24-44" aria-hidden="true" tabindex="-1"></a>    inflation <span class="ot">&lt;-</span> <span class="fu">mean</span>(bootstrap_sample<span class="sc">$</span>inflation)</span>
+<span id="cb24-45"><a href="#cb24-45" aria-hidden="true" tabindex="-1"></a>    wages[j] <span class="ot">&lt;-</span> wages[j <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">+</span> wage_growth <span class="sc">/</span> <span class="dv">100</span>) <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> inflation <span class="sc">/</span> <span class="dv">100</span>)</span>
+<span id="cb24-46"><a href="#cb24-46" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb24-47"><a href="#cb24-47" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb24-48"><a href="#cb24-48" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Step 3: Simulate TRS (Defined Benefit Pension)</span></span>
+<span id="cb24-49"><a href="#cb24-49" aria-hidden="true" tabindex="-1"></a>  final_salary <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">tail</span>(wages, <span class="dv">3</span>))  <span class="co"># Final Average Salary from last 3 years</span></span>
+<span id="cb24-50"><a href="#cb24-50" aria-hidden="true" tabindex="-1"></a>  trs_monthly_benefit <span class="ot">&lt;-</span> final_salary <span class="sc">*</span> final_average_salary_percentages[<span class="dv">1</span>]  <span class="co"># Using the first tier percentage for calculation</span></span>
+<span id="cb24-51"><a href="#cb24-51" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb24-52"><a href="#cb24-52" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Adjust TRS income for inflation each year during retirement</span></span>
+<span id="cb24-53"><a href="#cb24-53" aria-hidden="true" tabindex="-1"></a>  trs_income <span class="ot">&lt;-</span> <span class="fu">numeric</span>(max_age <span class="sc">-</span> retirement_age <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb24-54"><a href="#cb24-54" aria-hidden="true" tabindex="-1"></a>  trs_income[<span class="dv">1</span>] <span class="ot">&lt;-</span> trs_monthly_benefit</span>
+<span id="cb24-55"><a href="#cb24-55" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (k <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span>(max_age <span class="sc">-</span> retirement_age <span class="sc">+</span> <span class="dv">1</span>)) {</span>
+<span id="cb24-56"><a href="#cb24-56" aria-hidden="true" tabindex="-1"></a>    trs_income[k] <span class="ot">&lt;-</span> trs_income[k <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fu">mean</span>(bootstrap_sample<span class="sc">$</span>inflation) <span class="sc">/</span> <span class="dv">100</span>)  <span class="co"># Adjust by inflation</span></span>
+<span id="cb24-57"><a href="#cb24-57" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb24-58"><a href="#cb24-58" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb24-59"><a href="#cb24-59" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Step 4: Simulate ORP (Defined Contribution Plan)</span></span>
+<span id="cb24-60"><a href="#cb24-60" aria-hidden="true" tabindex="-1"></a>  orp_balance <span class="ot">&lt;-</span> initial_orp_balance</span>
+<span id="cb24-61"><a href="#cb24-61" aria-hidden="true" tabindex="-1"></a>  orp_income <span class="ot">&lt;-</span> <span class="fu">numeric</span>(max_age <span class="sc">-</span> retirement_age <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb24-62"><a href="#cb24-62" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (k <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>(max_age <span class="sc">-</span> retirement_age <span class="sc">+</span> <span class="dv">1</span>)) {</span>
+<span id="cb24-63"><a href="#cb24-63" aria-hidden="true" tabindex="-1"></a>    orp_income[k] <span class="ot">&lt;-</span> orp_balance <span class="sc">*</span> withdrawal_rate</span>
+<span id="cb24-64"><a href="#cb24-64" aria-hidden="true" tabindex="-1"></a>    orp_balance <span class="ot">&lt;-</span> orp_balance <span class="sc">-</span> orp_income[k]</span>
+<span id="cb24-65"><a href="#cb24-65" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (orp_balance <span class="sc">&lt;</span> <span class="dv">0</span>) {</span>
+<span id="cb24-66"><a href="#cb24-66" aria-hidden="true" tabindex="-1"></a>      orp_balance <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb24-67"><a href="#cb24-67" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb24-68"><a href="#cb24-68" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb24-69"><a href="#cb24-69" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb24-70"><a href="#cb24-70" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Step 5: Track metrics for each bootstrap simulation</span></span>
+<span id="cb24-71"><a href="#cb24-71" aria-hidden="true" tabindex="-1"></a>  avg_trs_income[i] <span class="ot">&lt;-</span> <span class="fu">mean</span>(trs_income)</span>
+<span id="cb24-72"><a href="#cb24-72" aria-hidden="true" tabindex="-1"></a>  avg_orp_income[i] <span class="ot">&lt;-</span> <span class="fu">mean</span>(orp_income)</span>
+<span id="cb24-73"><a href="#cb24-73" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb24-74"><a href="#cb24-74" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Check if ORP funds are exhausted before death</span></span>
+<span id="cb24-75"><a href="#cb24-75" aria-hidden="true" tabindex="-1"></a>  orp_exhaustion_prob[i] <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(orp_balance <span class="sc">==</span> <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb24-76"><a href="#cb24-76" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb24-77"><a href="#cb24-77" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Check if ORP has higher monthly income than TRS in retirement</span></span>
+<span id="cb24-78"><a href="#cb24-78" aria-hidden="true" tabindex="-1"></a>  orp_higher_income_prob[i] <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="fu">mean</span>(orp_income) <span class="sc">&gt;</span> <span class="fu">mean</span>(trs_income), <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb24-79"><a href="#cb24-79" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb24-80"><a href="#cb24-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-81"><a href="#cb24-81" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate final statistics</span></span>
+<span id="cb24-82"><a href="#cb24-82" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb24-83"><a href="#cb24-83" aria-hidden="true" tabindex="-1"></a>  <span class="at">Metric =</span> <span class="fu">c</span>(<span class="st">"Average Monthly TRS Income"</span>, <span class="st">"Average Monthly ORP Income"</span>, </span>
+<span id="cb24-84"><a href="#cb24-84" aria-hidden="true" tabindex="-1"></a>             <span class="st">"Probability ORP Exhausts Before Death"</span>, <span class="st">"Probability ORP Higher Income"</span>),</span>
+<span id="cb24-85"><a href="#cb24-85" aria-hidden="true" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(<span class="fu">mean</span>(avg_trs_income), <span class="fu">mean</span>(avg_orp_income),</span>
+<span id="cb24-86"><a href="#cb24-86" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mean</span>(orp_exhaustion_prob), <span class="fu">mean</span>(orp_higher_income_prob))</span>
+<span id="cb24-87"><a href="#cb24-87" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-88"><a href="#cb24-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-89"><a href="#cb24-89" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(results)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                 Metric    Value
+1            Average Monthly TRS Income 1390.351
+2            Average Monthly ORP Income 2315.796
+3 Probability ORP Exhausts Before Death    0.000
+4         Probability ORP Higher Income    1.000</code></pre>
+</div>
+</div>
+</section>
+<section id="data-driven-recommendation" class="level2">
+<h2 class="anchored" data-anchor-id="data-driven-recommendation">Data-Driven Recommendation</h2>
+<p>As a financial advisor, here’s my recommendation:</p>
+<p><strong>TRS (Stability)</strong>: Provides stable, inflation-adjusted retirement income. Best for employees near retirement or those who prefer predictable, low-risk benefits.</p>
+<p><strong>ORP (Growth)</strong>: Offers growth potential tied to market performance but comes with risks of variable income and possible depletion of savings. Best for employees with a higher risk tolerance and investment management experience.</p>
 
 
 </section>

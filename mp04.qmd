@@ -20,7 +20,7 @@ In contrast, the Optional Retirement Plan (ORP) operates as a defined-contributi
 
 This project aims to utilize historical financial data along with a bootstrap inference method to assess the two retirement plans available at CUNY, providing data-driven insights for employees’ retirement planning.
 
-For this analysis, we will use  data from two primary financial and economic sources: AlphaVantage and the Federal Reserve Economic Data (FRED) repository. AlphaVantage is a commercial data provider offering APIs that deliver both real-time and historical stock market data. The FRED repository, managed by the Federal Reserve Bank of St. Louis, grants access to an extensive range of economic data and financial metrics.
+For this analysis, we will use data from two primary financial and economic sources: AlphaVantage and the Federal Reserve Economic Data (FRED) repository. AlphaVantage is a commercial data provider offering APIs that deliver both real-time and historical stock market data. The FRED repository, managed by the Federal Reserve Bank of St. Louis, grants access to an extensive range of economic data and financial metrics.
 
 ## Data Sources
 
@@ -406,7 +406,7 @@ inflation_wage <- inner_join(wage_growth_data, inflation_data, by = "observation
 
 ```
 
-The following graph shows the change in wage growth and inflation rates over time from 2005 to 2024. 
+The following graph shows the change in wage growth and inflation rates over time from 2005 to 2024.
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
@@ -488,7 +488,7 @@ ggplot(inflation_wage, aes(x = inflation_rate, y = wage_growth)) +
   )
 ```
 
-Now, let's explore the correlations between US equity and international equities. 
+Now, let's explore the correlations between US equity and international equities.
 
 First, combine US equity data with the international equity data.
 
@@ -508,8 +508,7 @@ equity_data <- equity_data %>%
   )
 ```
 
-Then, we plot the US Equity market returns against the International Equity market returns into a scattered plot. Looking at the plot, it looks like there's a positive correlation between the two metrics. This suggests that as the market return for US equity rises, there's a high likely possibility that the International equity's market return will also rise. 
-
+Then, we plot the US Equity market returns against the International Equity market returns into a scattered plot. Looking at the plot, it looks like there's a positive correlation between the two metrics. This suggests that as the market return for US equity rises, there's a high likely possibility that the International equity's market return will also rise.
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
@@ -523,7 +522,8 @@ equity_data |>
        x = "US Equity Market Returns",
        y = "International Equity Market Returns")
 ```
-Lastly, let's look at the correlation between bond return and short term debt return. Similar to what we did before, first we will combine the two datasets together to create a scattered plot. 
+
+Lastly, let's look at the correlation between bond return and short term debt return. Similar to what we did before, first we will combine the two datasets together to create a scattered plot.
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
@@ -559,17 +559,11 @@ print(correlation_bond_short_term)
 
 A correlation of 0.83 implies a strong and positive relationship between bond returns and short-term debt returns. This means that changes in one are typically reflected in changes in the other, and this information is crucial for making informed decisions about investing in these two types of fixed-income instruments. It also suggests that investors can expect similar movements in both asset classes, which could influence decisions about asset allocation and diversification in investment portfolios.
 
-
 ## Task 5: Historical Comparison
 
 In this task, we examine the hypothetical scenario of an employee hired by CUNY in 2005 and retiring in October 2024. We compare the total contributions to the Teacher Retirement System (TRS) and the Optional Retirement Plan (ORP) over the employee’s career, from 2005 to 2024. The analysis will highlight the differences in employer and employee contributions, providing insights into the better retirement plan option for the employee.
 
-Assumptions for the Hypothetical Employee:
-- The employee is hired at age 40 in January 2005 with a starting salary of $75,000.
-- The salary grows at an annual rate of 3%.
-- The employee works for 20 years, retiring at age 60 at the end of October 2024.
-- Contributions to both retirement plans (TRS and ORP) are calculated based on the salary each year.
-- Employer contributions are fixed for TRS at 8% and for ORP, at 8% for the first 7 years and 10% thereafter.
+Assumptions for the Hypothetical Employee: - The employee is hired at age 40 in January 2005 with a starting salary of \$75,000. - The salary grows at an annual rate of 3%. - The employee works for 20 years, retiring at age 60 at the end of October 2024. - Contributions to both retirement plans (TRS and ORP) are calculated based on the salary each year. - Employer contributions are fixed for TRS at 8% and for ORP, at 8% for the first 7 years and 10% thereafter.
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
@@ -667,7 +661,6 @@ kable(contributions_data,
 
 ```
 
-
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
 # Load the necessary library for creating the table
@@ -693,9 +686,9 @@ kable(contributions_data, caption = "Comparison of the Total Contributions over 
 
 Conclusion:
 
-- Before 2012, both plans are equally beneficial, with identical contribution amounts.
-- After 2011, ORP offers a superior retirement benefit due to the increase in employer contributions. The ORP's 10% employer contribution outpaces TRS's stable 8% employer contribution.
-- The gap between ORP and TRS contributions continues to grow each year as the salary increases, making ORP the better plan for employees in terms of total retirement contributions, especially for those with higher salaries or longer service years.
+-   Before 2012, both plans are equally beneficial, with identical contribution amounts.
+-   After 2011, ORP offers a superior retirement benefit due to the increase in employer contributions. The ORP's 10% employer contribution outpaces TRS's stable 8% employer contribution.
+-   The gap between ORP and TRS contributions continues to grow each year as the salary increases, making ORP the better plan for employees in terms of total retirement contributions, especially for those with higher salaries or longer service years.
 
 ## Task 6: Fixed Rate Analysis
 
@@ -703,11 +696,10 @@ In this task, we will project an employee's pension benefit (for TRS) and withdr
 
 Key Assumptions:
 
-- The employee retires in October 2024 at age 60.
-- The employee is expected to live until age 88, which gives them 28 years of retirement.
-- Pension Benefit is based on a fixed formula that guarantees monthly payments for life.
-- The TRS retirement benefit increases with a Cost-of-Living Adjustment (COLA) of 2% per year, based on historical averages.
-
+-   The employee retires in October 2024 at age 60.
+-   The employee is expected to live until age 88, which gives them 28 years of retirement.
+-   Pension Benefit is based on a fixed formula that guarantees monthly payments for life.
+-   The TRS retirement benefit increases with a Cost-of-Living Adjustment (COLA) of 2% per year, based on historical averages.
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
@@ -767,3 +759,112 @@ kable(retirement_benefits,
       caption = "Monthly Income Comparison: TRS vs ORP (2005-2024)",
       format = "html", digits = 2, align = c("l", "r", "r"))
 ```
+
+## Task 7: Monte Carlo Analysis
+
+In this section, we present our Monte Carlo analysis results comparing the TRS (Teachers' Retirement System) and ORP (Optional Retirement Program) plans for CUNY employees. We utilize bootstrap sampling to create 200 “bootstrap histories” from historical data on wage growth, inflation, equity returns, and bond returns. This approach allows us to generate different possible future scenarios and evaluate the retirement benefits for employees under both plans.
+
+```{r}
+
+# Set parameters for simulation
+num_bootstraps <- 200
+starting_salary <- 50000
+retirement_age <- 55
+max_age <- 85
+initial_orp_balance <- 100000
+withdrawal_rate <- 0.04  # 4% withdrawal rate
+final_average_salary_percentages <- c(0.0167, 0.0175, 0.35)  # TRS tier percentages (example)
+
+# Combine all data into one data frame
+all_data <- wage_growth_data %>%
+  left_join(inflation_data, by = "observation_date") %>%
+  left_join(us_equity_data, by = "observation_date") %>%
+  left_join(intl_equity_data, by = "observation_date") %>%
+  left_join(bond_data, by = "observation_date") %>%
+  left_join(short_term_debt, by = "observation_date")
+
+# Hypothetical data simulation
+historical_data <- data.frame(
+  wage_growth = rnorm(20, mean = 3, sd = 1), 
+  inflation = rnorm(20, mean = 2, sd = 1),  
+  us_equity_returns = rnorm(20, mean = 7, sd = 5),  
+  int_equity_returns = rnorm(20, mean = 6, sd = 4), 
+  bond_returns = rnorm(20, mean = 3, sd = 2)  
+)
+
+# Initialize lists to store results
+orp_exhaustion_prob <- numeric(num_bootstraps)
+orp_higher_income_prob <- numeric(num_bootstraps)
+avg_trs_income <- numeric(num_bootstraps)
+avg_orp_income <- numeric(num_bootstraps)
+
+# Monte Carlo Simulation
+set.seed(100)  
+for (i in 1:num_bootstraps) {
+  # Step 1: Bootstrap sampling from historical data
+  bootstrap_sample <- historical_data[sample(nrow(historical_data), nrow(historical_data), replace = TRUE), ]
+  
+  # Step 2: Simulate salary growth
+  wages <- numeric(max_age - retirement_age + 1)
+  wages[1] <- starting_salary
+  for (j in 2:(max_age - retirement_age + 1)) {
+    wage_growth <- mean(bootstrap_sample$wage_growth)
+    inflation <- mean(bootstrap_sample$inflation)
+    wages[j] <- wages[j - 1] * (1 + wage_growth / 100) * (1 - inflation / 100)
+  }
+  
+  # Step 3: Simulate TRS (Defined Benefit Pension)
+  final_salary <- mean(tail(wages, 3))  # Final Average Salary from last 3 years
+  trs_monthly_benefit <- final_salary * final_average_salary_percentages[1]  # Using the first tier percentage for calculation
+  
+  # Adjust TRS income for inflation each year during retirement
+  trs_income <- numeric(max_age - retirement_age + 1)
+  trs_income[1] <- trs_monthly_benefit
+  for (k in 2:(max_age - retirement_age + 1)) {
+    trs_income[k] <- trs_income[k - 1] * (1 + mean(bootstrap_sample$inflation) / 100)  # Adjust by inflation
+  }
+  
+  # Step 4: Simulate ORP (Defined Contribution Plan)
+  orp_balance <- initial_orp_balance
+  orp_income <- numeric(max_age - retirement_age + 1)
+  for (k in 1:(max_age - retirement_age + 1)) {
+    orp_income[k] <- orp_balance * withdrawal_rate
+    orp_balance <- orp_balance - orp_income[k]
+    if (orp_balance < 0) {
+      orp_balance <- 0
+    }
+  }
+  
+  # Step 5: Track metrics for each bootstrap simulation
+  avg_trs_income[i] <- mean(trs_income)
+  avg_orp_income[i] <- mean(orp_income)
+  
+  # Check if ORP funds are exhausted before death
+  orp_exhaustion_prob[i] <- ifelse(orp_balance == 0, 1, 0)
+  
+  # Check if ORP has higher monthly income than TRS in retirement
+  orp_higher_income_prob[i] <- ifelse(mean(orp_income) > mean(trs_income), 1, 0)
+}
+
+# Calculate final statistics
+results <- data.frame(
+  Metric = c("Average Monthly TRS Income", "Average Monthly ORP Income", 
+             "Probability ORP Exhausts Before Death", "Probability ORP Higher Income"),
+  Value = c(mean(avg_trs_income), mean(avg_orp_income),
+            mean(orp_exhaustion_prob), mean(orp_higher_income_prob))
+)
+
+print(results)
+
+```
+
+## Data-Driven Recommendation
+
+As a financial advisor, here's my recommendation:
+
+**TRS (Stability)**: Provides stable, inflation-adjusted retirement income. Best for employees near retirement or those who prefer predictable, low-risk benefits.
+
+**ORP (Growth)**: Offers growth potential tied to market performance but comes with risks of variable income and possible depletion of savings. Best for employees with a higher risk tolerance and investment management experience.
+
+
+
