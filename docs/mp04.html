@@ -1430,6 +1430,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="task-7-monte-carlo-analysis">Task 7: Monte Carlo Analysis</h2>
 <p>In this section, we present our Monte Carlo analysis results comparing the TRS (Teachers’ Retirement System) and ORP (Optional Retirement Program) plans for CUNY employees. We utilize bootstrap sampling to create 200 “bootstrap histories” from historical data on wage growth, inflation, equity returns, and bond returns. This approach allows us to generate different possible future scenarios and evaluate the retirement benefits for employees under both plans.</p>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set parameters for simulation</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>num_bootstraps <span class="ot">&lt;-</span> <span class="dv">200</span></span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>starting_salary <span class="ot">&lt;-</span> <span class="dv">50000</span></span>
@@ -1519,9 +1521,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb24-87"><a href="#cb24-87" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb24-88"><a href="#cb24-88" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb24-89"><a href="#cb24-89" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(results)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>                                 Metric    Value
-1            Average Monthly TRS Income 1390.351
+1            Average Monthly TRS Income 1455.634
 2            Average Monthly ORP Income 2315.796
 3 Probability ORP Exhausts Before Death    0.000
 4         Probability ORP Higher Income    1.000</code></pre>

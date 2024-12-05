@@ -764,7 +764,8 @@ kable(retirement_benefits,
 
 In this section, we present our Monte Carlo analysis results comparing the TRS (Teachers' Retirement System) and ORP (Optional Retirement Program) plans for CUNY employees. We utilize bootstrap sampling to create 200 “bootstrap histories” from historical data on wage growth, inflation, equity returns, and bond returns. This approach allows us to generate different possible future scenarios and evaluate the retirement benefits for employees under both plans.
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
 
 # Set parameters for simulation
 num_bootstraps <- 200
