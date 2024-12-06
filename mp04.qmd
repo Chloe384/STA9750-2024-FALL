@@ -336,9 +336,36 @@ short_term_debt <- read_excel(zip_contents_short_term, sheet = 2)
 
 ## Task 4: Investigation and Visualization of Input Data
 
-Before beginning our retirement plan comparison analysis, we will do some preliminary exploration analysis on the 6 data sets imported to get familiar with our data. For the purposes of this project and to maintain consistency, we will only use data from the last 20 years (2005-2024).
+Before beginning our retirement plan comparison analysis, we will do some preliminary exploration analysis on the 6 data sets imported to get familiar with our data. 
 
-Let's first take a look at the wage growth and inflation data sets.
+Let's begin by examining wage growth over time. We observe a decline in wage growth during the 2010s, which reflects the impact of the Great Recession. Another notable shift is the increase in wage growth following the 2020s, driven in part by the economic recovery after the COVID-19 pandemic, labor shortages, and the rising demand for workers in certain sectors. These factors have contributed to stronger wage growth as companies compete for talent and adjust to new economic conditions.
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+ggplot(wage_growth_data, aes(x = observation_date, y = wage_growth)) +
+  geom_line(color = "blue") +
+  labs(title = "Wage Growth Over Time",
+       x = "Date",
+       y = "Wage Growth (%)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  
+
+```
+The graph below illustrates the inflation rate from 1960 to 2020. One notable trend is the sharp peak in inflation, surpassing 10% in the 1980s, driven by factors such as oil price shocks and high demand following economic instability. Inflation then steadily decreased, reaching its lowest point in the 2010s, partly due to a combination of low energy prices, global trade, and central bank policies aimed at stabilizing the economy after the 2008 financial crisis.
+
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+# Plot Inflation Rate Over Time
+ggplot(inflation_data, aes(x = observation_date, y = inflation_rate)) +
+  geom_line(color = "red") +
+  labs(title = "Inflation Rate Over Time",
+       x = "Date",
+       y = "Inflation Rate (%)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+Now, let's look into the correlation between wage growth and inflation rate. 
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
@@ -352,26 +379,6 @@ inflation_wage <- inner_join(wage_growth_data, inflation_data, by = "observation
 
 ```
 
-The following graph shows the change in wage growth and inflation rates over time from 2005 to 2024.
-
-```{r, message = FALSE, warning = FALSE}
-#| code-fold: true
-
-ggplot(inflation_wage, aes(x = observation_date)) +
-  geom_line(aes(y = inflation_rate, color = "Inflation"), size = 1.2) +  # Inflation line
-  geom_line(aes(y = wage_growth, color = "Wage Growth"), size = 1.2) +  # Wage Growth line
-  scale_color_manual(values = c("Inflation" = "blue", "Wage Growth" = "red")) +  # Custom colors for the lines
-  labs(title = "Inflation and Wage Growth Over Time",
-       x = "Date",
-       y = "Rate (%)",
-       color = "Legend") +
-  theme_minimal() +  # Clean and simple theme
-  theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),  # Title customization
-        axis.title = element_text(size = 12),  # Axis titles customization
-        axis.text = element_text(size = 10),  # Axis labels customization
-        legend.position = "top")  # Place the legend at the top
-
-```
 
 In addition, I want to measure the correlation of factors such as averages and variances for wage and inflation.
 
@@ -417,7 +424,8 @@ kable(summary_table, col.names = c("Metric", "Value"), caption = "Summary of Wag
 
 **Correlation**: The moderate correlation of 0.46 indicates that while wage growth and inflation are somewhat related, other economic factors play significant roles in influencing each of these metrics. Understanding this relationship can be useful for financial planning, as the purchasing power of wages is directly impacted by inflation.
 
-The graph below depicts the correlation between wage and inflation.
+The graph below illustrates the relationship between wage growth and inflation over time. It reveals a noticeable upward trend, where periods of increasing wage growth often align with rising inflation rates. This correlation suggests that when wages rise, inflation tends to follow, possibly due to higher consumer spending and increased demand for goods and services. Conversely, when wage growth slows, inflation also tends to ease, indicating the interconnected nature of these two economic factors. This dynamic reflects broader economic cycles and can be influenced by various factors such as supply and demand, monetary policy, and external economic shocks.
+
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
