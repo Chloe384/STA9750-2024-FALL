@@ -858,14 +858,26 @@ results <- data.frame(
             mean(orp_exhaustion_prob), mean(orp_higher_income_prob))
 )
 
-print(results)
+kable(results, caption = "Summary of Final Statistics")
 
 ```
 
+
+**Key Insights:**
+
+- **Average Monthly TRS Income**: TRS participants receive an average monthly income of $1,457.24. This reflects the plan’s stable, defined benefit structure, offering consistent, inflation-adjusted payments.
+
+- **Average Monthly ORP Income**: ORP participants earn an average of $2,315.80 per month. Since ORP income depends on investment returns, it can vary with market performance. While the average income is higher than TRS, it comes with more risk and volatility.
+
 ## Data-Driven Recommendation
 
-As a financial advisor, here's my recommendation:
+Based on this analysis, here’s my recommendation for CUNY employees considering the TRS and ORP plans:
 
-**TRS (Stability)**: Provides stable, inflation-adjusted retirement income. Best for employees near retirement or those who prefer predictable, low-risk benefits.
+- **TRS (Stability)**: The TRS plan offers stable, inflation-adjusted income, making it a low-risk option for employees who prioritize financial security. It’s ideal for those nearing retirement or those who prefer guaranteed benefits over investment growth. If you value consistent income and low risk, TRS is a reliable choice.
 
-**ORP (Growth)**: Offers growth potential tied to market performance but comes with risks of variable income and possible depletion of savings. Best for employees with a higher risk tolerance and investment management experience.
+- **ORP (Growth)**: The ORP plan offers potential for higher returns, tied to the performance of equities and bonds. However, it comes with risks, as market fluctuations can affect income and savings. ORP is best for employees with higher risk tolerance who are comfortable managing their investments and seeking long-term growth.
+
+Both plans have distinct advantages. Employees seeking stability should choose TRS, while those willing to take on more risk for higher potential returns may prefer ORP.
+
+
+

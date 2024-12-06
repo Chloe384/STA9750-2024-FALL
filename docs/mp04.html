@@ -1525,22 +1525,52 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb24-86"><a href="#cb24-86" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mean</span>(orp_exhaustion_prob), <span class="fu">mean</span>(orp_higher_income_prob))</span>
 <span id="cb24-87"><a href="#cb24-87" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb24-88"><a href="#cb24-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-89"><a href="#cb24-89" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(results)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb24-89"><a href="#cb24-89" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(results, <span class="at">caption =</span> <span class="st">"Summary of Final Statistics"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-stdout">
-<pre><code>                                 Metric    Value
-1            Average Monthly TRS Income 1457.244
-2            Average Monthly ORP Income 2315.796
-3 Probability ORP Exhausts Before Death    0.000
-4         Probability ORP Higher Income    1.000</code></pre>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Summary of Final Statistics</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Metric</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Average Monthly TRS Income</td>
+<td style="text-align: right;">1547.791</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Average Monthly ORP Income</td>
+<td style="text-align: right;">2315.796</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Probability ORP Exhausts Before Death</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Probability ORP Higher Income</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
+<p><strong>Key Insights:</strong></p>
+<ul>
+<li><p><strong>Average Monthly TRS Income</strong>: TRS participants receive an average monthly income of $1,457.24. This reflects the plan’s stable, defined benefit structure, offering consistent, inflation-adjusted payments.</p></li>
+<li><p><strong>Average Monthly ORP Income</strong>: ORP participants earn an average of $2,315.80 per month. Since ORP income depends on investment returns, it can vary with market performance. While the average income is higher than TRS, it comes with more risk and volatility.</p></li>
+</ul>
 </section>
 <section id="data-driven-recommendation" class="level2">
 <h2 class="anchored" data-anchor-id="data-driven-recommendation">Data-Driven Recommendation</h2>
-<p>As a financial advisor, here’s my recommendation:</p>
-<p><strong>TRS (Stability)</strong>: Provides stable, inflation-adjusted retirement income. Best for employees near retirement or those who prefer predictable, low-risk benefits.</p>
-<p><strong>ORP (Growth)</strong>: Offers growth potential tied to market performance but comes with risks of variable income and possible depletion of savings. Best for employees with a higher risk tolerance and investment management experience.</p>
+<p>Based on this analysis, here’s my recommendation for CUNY employees considering the TRS and ORP plans:</p>
+<ul>
+<li><p><strong>TRS (Stability)</strong>: The TRS plan offers stable, inflation-adjusted income, making it a low-risk option for employees who prioritize financial security. It’s ideal for those nearing retirement or those who prefer guaranteed benefits over investment growth. If you value consistent income and low risk, TRS is a reliable choice.</p></li>
+<li><p><strong>ORP (Growth)</strong>: The ORP plan offers potential for higher returns, tied to the performance of equities and bonds. However, it comes with risks, as market fluctuations can affect income and savings. ORP is best for employees with higher risk tolerance who are comfortable managing their investments and seeking long-term growth.</p></li>
+</ul>
+<p>Both plans have distinct advantages. Employees seeking stability should choose TRS, while those willing to take on more risk for higher potential returns may prefer ORP.</p>
 
 
 </section>
