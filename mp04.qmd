@@ -1,6 +1,7 @@
 # Mini Project #04: Monte Carlo-Informed Selection of CUNY Retirement Plans
 
-In this mini-project, the goal is to use Monte Carlo simulations to evaluate and inform the selection of a retirement plan based on various financial data. The code provided fetches historical data from multiple sources, including AlphaVantage and FRED, which is then used to model the performance of different asset classes. Here's an explanation of the key components of the code.
+In this mini-project, we use Monte Carlo simulations to evaluate and guide the selection of a retirement plan based on various financial data. The code fetches historical data from sources like AlphaVantage and FRED, which is then used to model the performance of different asset classes. Below is an explanation of the key components of the code.
+
 
 ## Introduction
 
@@ -202,62 +203,25 @@ inflation_data <- inflation_data |>
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
-library(httr)
 # Request monthly adjusted data for SPY (U.S. Equity Market)
 spy_file <- request(ALPHAVANTAGE_URL) |>
   req_url_path("query") |>
   req_url_query(
-    `function` = "TIME_SERIES_MONTHLY",  # Request monthly time series data
+    `function` = "TIME_SERIES_MONTHLY_ADJUSTED",  # Request monthly time series data
     apikey = apikey,                     # AlphaVantage API key
     datatype = "csv",                    # Data format as CSV
-    symbol = "SPY"                       # Symbol for the Vanguard Total Stock Market ETF
+    symbol = "SPY"                   
   ) |>
   req_perform()
 
 # Read the CSV data for SPY (U.S. Equity Market)
 spy_data <- read_csv(resp_body_string(spy_file))
+us_equity_data <- spy_data |>
+  select(c('timestamp', 'adjusted close')) |>
+  rename(us_equity_index = 'adjusted close') |>
+  rename(observation_date = 'timestamp')
 
 
-```
-
-```{r, message = FALSE, warning = FALSE}
-#| code-fold: true
-
-# Set working directory and path for saving the file
-dir <- getwd()
-save_path_us_equity <- file.path(dir, "us_equity.zip")
-
-# Check if the file doesn't exist locally and download it if necessary
-if (!file.exists(save_path_us_equity)) {
-  # Request data from FRED API for US Equities (S&P 500 Index)
-  fred_req_us_equity <- request("https://api.stlouisfed.org/fred/series/observations") |>
-    req_url_query(
-      series_id = "SP500",  # Series ID for S&P 500 Index
-      api_key = fredkey,    # FRED API key
-      file_type = "xls"     # Specify Excel file type
-    )
-  
-  # Perform the request and save the response as a raw file
-  fred_resp_us_equity <- fred_req_us_equity |>
-    req_perform()
-  
-  # Save the raw data to the specified file path
-  fred_resp_us_equity |>
-    resp_body_raw() |>
-    writeBin(save_path_us_equity)
-}
-
-# Define temporary directory and extract the contents of the ZIP file
-td <- tempdir()
-zip_contents_us_equity <- unzip(save_path_us_equity, exdir = td)
-
-# Read the Excel file from the extracted contents
-fred_us_equity <- read_excel(zip_contents_us_equity, sheet = 2)
-
-# Select and clean the data for US Equities
-us_equity_data <- fred_us_equity |>
-  select(c('observation_date', 'SP500')) |>
-  rename(us_equity_index = 'SP500')  # Rename column for clarity
 
 ```
 
@@ -265,42 +229,26 @@ us_equity_data <- fred_us_equity |>
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
+# Request monthly adjusted data for VEU (International Equity Market)
+veu_file <- request(ALPHAVANTAGE_URL) |>
+  req_url_path("query") |>
+  req_url_query(
+    `function` = "TIME_SERIES_MONTHLY_ADJUSTED",  # Request monthly time series data
+    apikey = apikey,                     # AlphaVantage API key
+    datatype = "csv",                  
+    symbol = "VEU"                  
+  ) |>
+  req_perform()
 
-# Set working directory and path for saving the file
-dir <- getwd()
-save_path_intl_equity <- file.path(dir, "intl_equity.zip")
+# Read the CSV data for SPY (U.S. Equity Market)
+veu_data <- read_csv(resp_body_string(veu_file))
+intl_equity_data <- veu_data |>
+  select(c('timestamp', 'adjusted close')) |>
+  rename(intl_equity_index = 'adjusted close') |>
+  rename(observation_date = 'timestamp')
 
-# Check if the file doesn't exist locally and download it if necessary
-if (!file.exists(save_path_intl_equity)) {
-  # Request data from FRED API for International Equities
-  fred_req_intl_equity <- request("https://api.stlouisfed.org/fred/series/observations") |>
-    req_url_query(
-      series_id = "IR14270",  # Series ID for World Stock Market Capitalization (Non-US)
-      api_key = fredkey,      # FRED API key
-      file_type = "xls"       # Specify Excel file type
-    )
-  
-  # Perform the request and save the response as a raw file
-  fred_resp_intl_equity <- fred_req_intl_equity |>
-    req_perform()
-  
-  # Save the raw data to the specified file path
-  fred_resp_intl_equity |>
-    resp_body_raw() |>
-    writeBin(save_path_intl_equity)
-}
 
-# Define temporary directory and extract the contents of the ZIP file
-td <- tempdir()
-zip_contents_intl_equity <- unzip(save_path_intl_equity, exdir = td)
 
-# Read the Excel file from the extracted contents
-fred_intl_equity <- read_excel(zip_contents_intl_equity, sheet = 2)
-
-# Select and clean the data for International Equities
-intl_equity_data <- fred_intl_equity |>
-  select(c('observation_date', 'IR14270')) |>
-  rename(intl_equity_index = 'IR14270')  # Rename column for clarity
 
 ```
 
@@ -455,7 +403,7 @@ summary_table <- data.frame(
 )
 
 # Print the summary table
-print(summary_table)
+kable(summary_table, col.names = c("Metric", "Value"), caption = "Summary of Wage Growth and Inflation")
 
 ```
 
