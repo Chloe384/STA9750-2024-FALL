@@ -9,16 +9,16 @@ The dataset used in this analysis contains records of subway delays, broken down
 
 ## Data Preprocessing:
 
-The dataset was filtered to remove the "Systemwide" data, which represents the overall system and is not specific to any subway line.
+- The dataset was filtered to remove the "Systemwide" data, which represents the overall system and is not specific to any subway line.
 The period column was created based on the day_type column (1 for peak, 2 for off-peak).
 The year column was extracted to distinguish between COVID and Post-COVID periods.
 Performance Analysis:
 
-The total delays were calculated for each subway line during both peak and off-peak hours.
+- The total delays were calculated for each subway line during both peak and off-peak hours.
 The top 5 subway lines with the highest delays and the top 5 subway lines with the lowest delays were identified.
 Period Comparison:
 
-The COVID period (2020-2021) and the Post-COVID period (2022-2024) were compared to assess how delays have changed over time.
+- The COVID period (2020-2021) and the Post-COVID period (2022-2024) were compared to assess how delays have changed over time.
 
 
 ```{r, message = FALSE, warning = FALSE}
@@ -119,37 +119,6 @@ print(worst_peak_table_post_covid)
 
 ```
 
-```{r, message = FALSE, warning = FALSE}
-#| code-fold: true
-library(dplyr)
-library(ggplot2)
-library(lubridate)
-
-# Ensure month is in date format
-MTA_train_delays$month <- as.Date(MTA_train_delays$month)
-
-# Extract year and summarize total delays by year and line, excluding 'Systemwide'
-delay_summary <- MTA_train_delays %>%
-  mutate(year = year(month)) %>%  # Extract the year
-  filter(line != "Systemwide") %>%  # Exclude subway systemwide
-  group_by(year, line) %>%
-  summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop')
-
-# Create a new column to categorize years into blocks
-delay_summary <- delay_summary %>%
-  mutate(period = ifelse(year >= 2020 & year <= 2021, "COVID (2020-2021)", "Post-COVID (2022-2024)"))
-
-# Create a bar chart
-ggplot(delay_summary, aes(x = line, y = total_delays, fill = period)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Total Delays by Subway Line",
-       x = "Subway Line",
-       y = "Total Delays",
-       fill = "Period") +
-  theme_minimal() +
-  scale_x_discrete(drop = FALSE)  # Ensure all lines are displayed
-
-```
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
@@ -185,10 +154,15 @@ animated_plot <- ggplot(combined_summary, aes(x = line, y = total_delays, fill =
 output_gif_path <- "animated_bar_chart.gif"
 anim_save(output_gif_path, animated_plot, renderer = gifski_renderer())
 
-# Optionally, print message to confirm save
-cat("Animation saved as", output_gif_path)
-
 ```
+
+![MTA Train Delays Animation](animated_bar_chart.gif)
+
+
+Key Insights:
+
+The N, F, 6, and A lines experienced the greatest increase in delays, with their delays nearly doubling. 
+
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
@@ -338,11 +312,14 @@ output_gif_path <- "total_delays_animation.gif"
 # Save the animation as a GIF with gifski_renderer
 anim_save(output_gif_path, animated_plot, renderer = gifski_renderer())
 
-# Optionally, print message to confirm save
-cat("Animation saved as", output_gif_path)
-
 ```
 
+![MTA Train Delays Line Graph](total_delays_animation.gif)
+
+
+Key findings:
+- Delays dropped in the first quarter of 2020 due to the NYC shutdown.
+- Delays surged to their highest point in mid-2021 as NYC began to reopen
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
@@ -488,3 +465,14 @@ kable(combined_performance,
                     "Peak Lowest Line", "Peak Lowest Delays", "Off-Peak Lowest Line", "Off-Peak Lowest Delays"))
 
 ```
+
+Key Insights:
+
+Peak Time:
+
+- The N line experiences the highest number of delay cases (over 100,000).
+- The G line has the fewest delays (less than half of N train).
+
+Off-Peak Time:
+- The 2 train has the most significant delays.
+- The M train has the least delays.
