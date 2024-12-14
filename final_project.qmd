@@ -1,0 +1,490 @@
+
+# Analysis of MTA Subway Line Performance: Peak vs. Off-Peak Delays
+
+## Introduction
+This report analyzes the performance of various subway lines in terms of delays over different time periods, specifically comparing the COVID period (2020-2021) to the Post-COVID period (2022-2024). The analysis focuses on both peak and off-peak periods, which are defined as weekdays (1) and weekends (2), respectively.
+
+## Data Overview
+The dataset used in this analysis contains records of subway delays, broken down by line and day type (peak or off-peak), spanning from 2020 to 2024. The following steps outline how the data was processed and analyzed:
+
+## Data Preprocessing:
+
+The dataset was filtered to remove the "Systemwide" data, which represents the overall system and is not specific to any subway line.
+The period column was created based on the day_type column (1 for peak, 2 for off-peak).
+The year column was extracted to distinguish between COVID and Post-COVID periods.
+Performance Analysis:
+
+The total delays were calculated for each subway line during both peak and off-peak hours.
+The top 5 subway lines with the highest delays and the top 5 subway lines with the lowest delays were identified.
+Period Comparison:
+
+The COVID period (2020-2021) and the Post-COVID period (2022-2024) were compared to assess how delays have changed over time.
+
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+library(readr)
+library(lubridate)
+library(tidyverse)
+library(tidyr)
+library(gt)
+library(knitr)
+library(gganimate)
+library(dplyr)
+library(ggplot2)
+
+
+MTA_train_delays <- read_csv("C:\\Users\\zhuol\\OneDrive\\Documents\\STA9750-2024-FALL\\MTA_Subway_Trains_Delayed__Beginning_2020_20241024.csv")
+
+```
+  
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+#peak hours are weekdays (1) and off-peak hours are weekends (2)
+MTA_train_delays <- MTA_train_delays |>
+  mutate(period = ifelse(day_type == 1, "Peak", "Off-Peak"))
+```
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+performance <- MTA_train_delays %>%
+  group_by(line) %>%
+  summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop')
+```
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+library(dplyr)
+library(knitr)
+library(lubridate)  # For date manipulation
+
+# Create the period column based on day_type and remove 'Systemwide' from line
+MTA_train_delays <- MTA_train_delays %>%
+  mutate(period = ifelse(day_type == 1, "Peak", "Off-Peak"),
+         year = year(month)) %>%
+  filter(line != "Systemwide")  # Remove 'Systemwide' from line
+
+# Separate the data into COVID (2020-2021) and post-COVID (2022-2024)
+MTA_train_delays_covid <- MTA_train_delays %>%
+  filter(year >= 2020 & year <= 2021)
+
+MTA_train_delays_post_covid <- MTA_train_delays %>%
+  filter(year >= 2022 & year <= 2024)
+
+# Performance analysis for COVID period
+performance_covid <- MTA_train_delays_covid %>%
+  group_by(line, period) %>%
+  summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop')
+
+# Performance analysis for post-COVID period
+performance_post_covid <- MTA_train_delays_post_covid %>%
+  group_by(line, period) %>%
+  summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop')
+
+# Best and worst performers during COVID peak
+lowest_delay_covid <- performance_covid %>%
+  filter(period == "Peak") %>%
+  arrange(total_delays) %>%
+  slice(1)
+
+highest_delay_covid <- performance_covid %>%
+  filter(period == "Peak") %>%
+  arrange(desc(total_delays)) %>%
+  slice(1)
+
+# Best and worst performers during post-COVID peak
+lowest_delay_post_covid <- performance_post_covid %>%
+  filter(period == "Peak") %>%
+  arrange(total_delays) %>%
+  slice(1)
+
+highest_delay_post_covid <- performance_post_covid %>%
+  filter(period == "Peak") %>%
+  arrange(desc(total_delays)) %>%
+  slice(1)
+
+# Create tables for COVID period
+best_peak_table_covid <- kable(lowest_delay_covid, caption = "Best Performer During COVID Peak Period")
+worst_peak_table_covid <- kable(highest_delay_covid, caption = "Worst Performer During COVID Peak Period")
+
+# Create tables for post-COVID period
+best_peak_table_post_covid <- kable(lowest_delay_covid, caption = "Best Performer During Post-COVID Peak Period")
+worst_peak_table_post_covid <- kable(highest_delay_covid, caption = "Worst Performer During Post-COVID Peak Period")
+
+# Print the tables
+print(best_peak_table_covid)
+print(worst_peak_table_covid)
+print(best_peak_table_post_covid)
+print(worst_peak_table_post_covid)
+
+```
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+# Ensure month is in date format
+MTA_train_delays$month <- as.Date(MTA_train_delays$month)
+
+# Extract year and summarize total delays by year and line, excluding 'Systemwide'
+delay_summary <- MTA_train_delays %>%
+  mutate(year = year(month)) %>%  # Extract the year
+  filter(line != "Systemwide") %>%  # Exclude subway systemwide
+  group_by(year, line) %>%
+  summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop')
+
+# Create a new column to categorize years into blocks
+delay_summary <- delay_summary %>%
+  mutate(period = ifelse(year >= 2020 & year <= 2021, "COVID (2020-2021)", "Post-COVID (2022-2024)"))
+
+# Create a bar chart
+ggplot(delay_summary, aes(x = line, y = total_delays, fill = period)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Total Delays by Subway Line",
+       x = "Subway Line",
+       y = "Total Delays",
+       fill = "Period") +
+  theme_minimal() +
+  scale_x_discrete(drop = FALSE)  # Ensure all lines are displayed
+
+```
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+# Ensure month is in date format
+MTA_train_delays$month <- as.Date(MTA_train_delays$month)
+
+# Extract year and summarize total delays by year and line, excluding 'Systemwide'
+delay_summary <- MTA_train_delays %>%
+  mutate(year = year(month)) %>%  # Extract the year
+  filter(line != "Systemwide") %>%  # Exclude subway systemwide
+  group_by(year, line) %>%
+  summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop')
+
+# Create a combined dataset for COVID and Post-COVID periods
+combined_summary <- delay_summary %>%
+  mutate(period = ifelse(year >= 2020 & year <= 2021, "COVID", "Post-COVID")) %>%
+  group_by(period, line) %>%
+  summarise(total_delays = sum(total_delays), .groups = 'drop')
+
+# Create the animated bar chart
+animated_plot <- ggplot(combined_summary, aes(x = line, y = total_delays, fill = period)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Total Delays by Subway Line (COVID vs. Post-COVID)",
+       x = "Subway Line",
+       y = "Total Delays",
+       fill = "Period") +
+  theme_minimal() +
+  transition_states(period, transition_length = 2, state_length = 1, wrap = TRUE) +  # Transition by period
+  enter_fade() +  # Fade in when the bar appears
+  exit_fade()    # Fade out when it disappears
+
+# Save the animation as a GIF
+output_gif_path <- "animated_bar_chart.gif"
+anim_save(output_gif_path, animated_plot, renderer = gifski_renderer())
+
+# Optionally, print message to confirm save
+cat("Animation saved as", output_gif_path)
+
+```
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(tidyr)  # For pivot_wider
+
+# Ensure month is in date format
+MTA_train_delays$month <- as.Date(MTA_train_delays$month)
+
+# Extract year and summarize total delays by year and line, excluding 'Systemwide'
+delay_summary <- MTA_train_delays %>%
+  mutate(year = year(month)) %>%  # Extract the year
+  filter(line != "Systemwide") %>%  # Exclude subway systemwide
+  group_by(year, line) %>%
+  summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop')
+
+# Create a summary for COVID and post-COVID periods
+change_summary <- delay_summary %>%
+  mutate(period = ifelse(year >= 2020 & year <= 2021, "COVID", "Post-COVID")) %>%
+  group_by(line, period) %>%
+  summarise(total_delays = sum(total_delays), .groups = 'drop') %>%
+  pivot_wider(names_from = period, values_from = total_delays, values_fill = 0) %>%
+  mutate(percent_change = (`Post-COVID` - `COVID`) / `COVID` * 100) %>%
+  select(line, percent_change)
+
+# Create a line graph
+ggplot(change_summary, aes(x = line, y = percent_change, group = 1)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Percent Change in Delays: COVID vs. Post-COVID",
+       x = "Subway Line",
+       y = "Percent Change in Delays (%)") +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::percent_format(scale = 1))  # Format y-axis as percentage
+
+```
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+# Ensure month is in date format
+MTA_train_delays$month <- as.Date(MTA_train_delays$month)
+
+# Calculate total delays for each subway line per year
+frequency_summary_per_year <- MTA_train_delays %>%
+  mutate(year = year(month)) %>%  # Extract the year
+  group_by(year, line) %>%
+  summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop')
+
+# Get top 10 lines with highest delays for each year
+top_delays_per_year <- frequency_summary_per_year %>%
+  group_by(year) %>%
+  slice_max(total_delays, n = 10) %>%
+  ungroup()  # Ungroup for easier printing/viewing
+
+# Create a line graph for the top subway lines with delays over the years
+ggplot(top_delays_per_year, aes(x = year, y = total_delays, color = line, group = line)) +
+  geom_line(size = 1) +  # Line for each subway line
+  geom_point(size = 2) +  # Points for each data point
+  labs(title = "Total Delays for Top Subway Lines Over the Years",
+       x = "Year",
+       y = "Total Delays") +
+  theme_minimal() +
+  scale_x_continuous(breaks = unique(top_delays_per_year$year)) +  # Customize x-axis
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Adjust x-axis text
+
+```
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+# Calculate total delays for each reporting category
+reporting_summary <- MTA_train_delays %>%
+  group_by(reporting_category) %>%
+  summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop')
+
+# Create a bar plot of total delays by reporting category with numbers inside the bins
+ggplot(reporting_summary, aes(x = reorder(reporting_category, total_delays), y = total_delays)) +
+  geom_bar(stat = "identity", fill = "#FF7F50", alpha = 0.5) +  # Make bars semi-transparent
+  geom_text(aes(label = total_delays), color = "black", size = 4, vjust = 0.5) +  # Place numbers inside bars
+  labs(title = "Total Delays by Reporting Category",
+       x = "Reporting Category",
+       y = "Total Delays") +
+  theme_minimal() +
+  coord_flip() +  # Flip coordinates for better readability
+  theme(plot.margin = margin(1, 1, 1, 3))  # Increase left margin for space
+```
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+
+# Remove NA values from subcategory and calculate total delays for each subcategory
+subcategory_summary <- MTA_train_delays %>%
+  filter(!is.na(subcategory)) %>%  # Remove NA values in the subcategory column
+  group_by(subcategory) %>%
+  summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop')
+
+# Get the top 10 subcategories with the most delays
+top_10_subcategories <- subcategory_summary %>%
+  arrange(desc(total_delays)) %>%
+  slice_head(n = 10)
+
+# Create a bar plot of total delays for the top 10 subcategories
+ggplot(top_10_subcategories, aes(x = reorder(subcategory, total_delays), y = total_delays)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Top 10 Subcategories with Most Delays",
+       x = "Subcategory",
+       y = "Total Delays") +
+  theme_minimal() +
+  coord_flip()  # Flip coordinates for better readability
+
+```
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+
+# Classify into Peak and Off-Peak
+MTA_train_delays <- MTA_train_delays %>%
+  mutate(time_period = ifelse(day_type == 1, "Peak", "Off-Peak"))
+
+# Summarize total delays by month and time period
+total_delays_summary <- MTA_train_delays %>%
+  mutate(month = floor_date(month, "month")) %>%  # Ensure month is in proper format
+  group_by(month, time_period) %>%
+  summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop')
+
+# Create a line plot of total delays by time period and animate by month
+animated_plot <- ggplot(total_delays_summary, aes(x = month, y = total_delays, color = time_period, group = time_period)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Trend of Total Delays per Peak & Off-Peak Times",
+       x = "Year",
+       y = "Total Delays",
+       color = "Time Period") +
+  theme_minimal() +
+  transition_reveal(month) +  # Reveal the lines progressively across the months
+  enter_fade() +  # Fade in at the start
+  exit_fade()    # Fade out at the end
+
+# Set the output GIF path
+output_gif_path <- "total_delays_animation.gif"
+
+# Save the animation as a GIF with gifski_renderer
+anim_save(output_gif_path, animated_plot, renderer = gifski_renderer())
+
+# Optionally, print message to confirm save
+cat("Animation saved as", output_gif_path)
+
+```
+
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+# Exclude specific lines (S Fkln, S 42nd, S Rock) from the dataset
+MTA_train_delays <- MTA_train_delays %>%
+  filter(!line %in% c("S Fkln", "S 42nd", "S Rock")) %>%
+  mutate(period = ifelse(day_type == 1, "Peak", "Off-Peak"),
+         year = year(month)) %>%
+  filter(line != "Systemwide")  # Remove 'Systemwide' from line
+
+# Performance analysis during peak period
+performance_peak <- MTA_train_delays %>%
+  filter(period == "Peak") %>%
+  group_by(line) %>%
+  summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop') %>%
+  arrange(desc(total_delays)) %>%
+  slice_head(n = 5)  # Top 5 lines with the highest delays
+
+# Display the top 5 subway lines with the highest delays during peak time
+library(knitr)
+kable(performance_peak, 
+      caption = "Top 5 Subway Lines with Highest Delays During Peak Time",
+      col.names = c("Subway Line", "Total Delays"))
+
+
+```
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+# Exclude specific lines (S Fkln, S 42nd, S Rock) from the dataset
+MTA_train_delays <- MTA_train_delays %>%
+  filter(!line %in% c("S Fkln", "S 42nd", "S Rock")) %>%
+  mutate(period = ifelse(day_type == 1, "Peak", "Off-Peak"),
+         year = year(month)) %>%
+  filter(line != "Systemwide")  # Remove 'Systemwide' from line
+
+# Performance analysis during off-peak period (corrected variable name)
+performance_off_peak <- MTA_train_delays %>%
+  filter(period == "Off-Peak") %>%
+  group_by(line) %>%
+  summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop') %>%
+  arrange(desc(total_delays)) %>%
+  slice_head(n = 5)  # Top 5 lines with the highest delays during off-peak time
+
+# Display the top 5 subway lines with the highest delays during off-peak time
+library(knitr)
+kable(performance_off_peak, 
+      caption = "Top 5 Subway Lines with Highest Delays During Off-Peak Time",
+      col.names = c("Subway Line", "Total Delays"))
+```
+
+
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+# Exclude specific lines (S Fkln, S 42nd, S Rock) from the dataset
+MTA_train_delays <- MTA_train_delays %>%
+  filter(!line %in% c("S Fkln", "S 42nd", "S Rock", "JZ")) %>%
+  mutate(period = ifelse(day_type == 1, "Peak", "Off-Peak"),
+         year = year(month)) %>%
+  filter(line != "Systemwide")  # Remove 'Systemwide' from line
+
+# Performance analysis during peak period
+performance_peak_lowest <- MTA_train_delays %>%
+  filter(period == "Peak") %>%
+  group_by(line) %>%
+  summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop') %>%
+  arrange(total_delays) %>%
+  slice_head(n = 5)  # Top 5 lines with the lowest delays
+
+# Display the top 5 subway lines with the lowest delays during peak time
+library(knitr)
+kable(performance_peak_lowest, 
+      caption = "Top 5 Subway Lines with Lowest Delays During Peak Time",
+      col.names = c("Subway Line", "Total Delays"))
+```
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+# Exclude specific lines (S Fkln, S 42nd, S Rock) from the dataset
+MTA_train_delays <- MTA_train_delays %>%
+  filter(!line %in% c("S Fkln", "S 42nd", "S Rock", "JZ")) %>%
+  mutate(period = ifelse(day_type == 1, "Peak", "Off-Peak"),
+         year = year(month)) %>%
+  filter(line != "Systemwide")  # Remove 'Systemwide' from line
+
+# Performance analysis during off-peak period (lowest delays)
+performance_off_peak_lowest <- MTA_train_delays %>%
+  filter(period == "Off-Peak") %>%
+  group_by(line) %>%
+  summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop') %>%
+  arrange(total_delays) %>%
+  slice_head(n = 5)  # Top 5 lines with the lowest delays during off-peak time
+
+# Display the top 5 subway lines with the lowest delays during off-peak time
+library(knitr)
+kable(performance_off_peak_lowest, 
+      caption = "Top 5 Subway Lines with Lowest Delays During Off-Peak Time",
+      col.names = c("Subway Line", "Total Delays"))
+
+```
+
+```{r, message = FALSE, warning = FALSE}
+#| code-fold: true
+# Ensure all dataframes have the same number of rows (top 5)
+max_rows <- max(nrow(performance_peak), nrow(performance_off_peak),
+                nrow(performance_peak_lowest), nrow(performance_off_peak_lowest))
+
+# Pad with NAs if needed, ensure that the new tibble has the correct column types
+performance_peak <- performance_peak %>%
+  bind_rows(tibble(line = rep(NA_character_, max_rows - nrow(performance_peak)),
+                   total_delays = rep(NA, max_rows - nrow(performance_peak))))
+
+performance_off_peak <- performance_off_peak %>%
+  bind_rows(tibble(line = rep(NA_character_, max_rows - nrow(performance_off_peak)),
+                   total_delays = rep(NA, max_rows - nrow(performance_off_peak))))
+
+performance_peak_lowest <- performance_peak_lowest %>%
+  bind_rows(tibble(line = rep(NA_character_, max_rows - nrow(performance_peak_lowest)),
+                   total_delays = rep(NA, max_rows - nrow(performance_peak_lowest))))
+
+performance_off_peak_lowest <- performance_off_peak_lowest %>%
+  bind_rows(tibble(line = rep(NA_character_, max_rows - nrow(performance_off_peak_lowest)),
+                   total_delays = rep(NA, max_rows - nrow(performance_off_peak_lowest))))
+
+# Now combine all four datasets into one large table
+combined_performance <- bind_cols(
+  performance_peak %>%
+    rename(Peak_Line = line, Peak_Highest_Delays = total_delays),
+  performance_off_peak %>%
+    rename(Off_Peak_Line = line, Off_Peak_Highest_Delays = total_delays),
+  performance_peak_lowest %>%
+    rename(Peak_Lowest_Line = line, Peak_Lowest_Delays = total_delays),
+  performance_off_peak_lowest %>%
+    rename(Off_Peak_Lowest_Line = line, Off_Peak_Lowest_Delays = total_delays)
+)
+
+# Display the combined table with peak and off-peak delay data
+library(knitr)
+kable(combined_performance, 
+      caption = "Top 5 Subway Lines with Highest and Lowest Delays During Peak and Off-Peak Times",
+      col.names = c("Peak Line", "Peak Highest Delays", "Off-Peak Line", "Off-Peak Highest Delays",
+                    "Peak Lowest Line", "Peak Lowest Delays", "Off-Peak Lowest Line", "Off-Peak Lowest Delays"))
+
+```
