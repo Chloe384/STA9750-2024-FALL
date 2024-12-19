@@ -6,8 +6,13 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Nikita Gautam">
+<meta name="author" content="Haolin Mo">
+<meta name="author" content="Yanting Zhao">
+<meta name="author" content="Chloe Yu">
+<meta name="author" content="Timbila Nikiema">
 
-<title>final_project – STA 9750 2024 Submission Material</title>
+<title>Group 2: Subway Surfers – STA 9750 2024 Submission Material</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -129,761 +134,193 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Group 2: Subway Surfers</h1>
+</div>
 
 
 
-<section id="analysis-of-mta-subway-line-performance-peak-vs.-off-peak-delays" class="level1">
-<h1>Analysis of MTA Subway Line Performance: Peak vs.&nbsp;Off-Peak Delays</h1>
-<section id="introduction" class="level2">
-<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>This report analyzes the performance of various subway lines in terms of delays over different time periods, specifically comparing the COVID period (2020-2021) to the Post-COVID period (2022-2024). The analysis focuses on both peak and off-peak periods, which are defined as weekdays (1) and weekends (2), respectively.</p>
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Authors</div>
+    <div class="quarto-title-meta-contents">
+             <p>Nikita Gautam </p>
+             <p>Haolin Mo </p>
+             <p>Yanting Zhao </p>
+             <p>Chloe Yu </p>
+             <p>Timbila Nikiema </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="overarching-question-how-have-delays-on-time-performance-and-safety-incidents-influenced-the-efficiency-of-subway-lines-across-nyc-boroughs-from-2020-to-2024" class="level2">
+<h2 class="anchored" data-anchor-id="overarching-question-how-have-delays-on-time-performance-and-safety-incidents-influenced-the-efficiency-of-subway-lines-across-nyc-boroughs-from-2020-to-2024">Overarching Question: How have delays, on-time performance, and safety incidents influenced the efficiency of subway lines across NYC boroughs from 2020 to 2024?</h2>
 </section>
-<section id="data-overview" class="level2">
-<h2 class="anchored" data-anchor-id="data-overview">Data Overview</h2>
-<p>The dataset used in this analysis contains records of subway delays, broken down by line and day type (peak or off-peak), spanning from 2020 to 2024. The following steps outline how the data was processed and analyzed:</p>
+<section id="motivations" class="level2">
+<h2 class="anchored" data-anchor-id="motivations">Motivations</h2>
+<p>The motivation for this analysis is to uncover how delays, on-time performance, and safety incidents impacted the efficiency of NYC subway lines and boroughs during the COVID and the post-COVID recovery period. By exploring these factors, we aim to identify patterns, address operational inefficiencies, and provide insights to improve reliability and safety for future subway operations.</p>
 </section>
-<section id="data-preprocessing" class="level2">
-<h2 class="anchored" data-anchor-id="data-preprocessing">Data Preprocessing:</h2>
-<ul>
-<li><p>The dataset was filtered to remove the “Systemwide” data, which represents the overall system and is not specific to any subway line. The period column was created based on the day_type column (1 for peak, 2 for off-peak). The year column was extracted to distinguish between COVID and Post-COVID periods. Performance Analysis:</p></li>
-<li><p>The total delays were calculated for each subway line during both peak and off-peak hours. The top 5 subway lines with the highest delays and the top 5 subway lines with the lowest delays were identified. Period Comparison:</p></li>
-<li><p>The COVID period (2020-2021) and the Post-COVID period (2022-2024) were compared to assess how delays have changed over time.</p></li>
-</ul>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readr)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gt)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gganimate)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>MTA_train_delays <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"C:</span><span class="sc">\\</span><span class="st">Users</span><span class="sc">\\</span><span class="st">zhuol</span><span class="sc">\\</span><span class="st">OneDrive</span><span class="sc">\\</span><span class="st">Documents</span><span class="sc">\\</span><span class="st">STA9750-2024-FALL</span><span class="sc">\\</span><span class="st">MTA_Subway_Trains_Delayed__Beginning_2020_20241024.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
+<section id="quantitative-findings-and-qualitative-insights" class="level2">
+<h2 class="anchored" data-anchor-id="quantitative-findings-and-qualitative-insights">Quantitative Findings and Qualitative Insights</h2>
+<p>High ridership leads to longer delays and higher safety risks, especially during peak hours. Track-related disruptions highlight the need for better maintenance. Winter months reduce reliability, while other seasons perform better. Post-COVID trends show changing passenger habits and service gaps on busy lines.</p>
+</section>
+<section id="importance-of-this-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="importance-of-this-analysis">Importance of This Analysis</h2>
+<p>By connecting ridership, delays, and safety, we uncovered critical issues like infrastructure strain, and seasonal impacts. These insights support targeted improvements, better maintenance, resource allocation, and weather-specific strategies to enhance reliability, safety, and rider experience. This analysis demonstrates how combined metrics drive meaningful, system-wide improvements.</p>
+</section>
+<section id="about-our-data" class="level2">
+<h2 class="anchored" data-anchor-id="about-our-data">About Our Data</h2>
+<p>For our analysis, we use multiple data sets from the NYC government’s official website. They focus on different metrics. First, we use transit performance data, which evaluates train wait times against scheduled intervals and delay rates during peak and off-peak hours. Secondly, for safety data, we focus on different types of incidents, including safety incidents, track-related incidents, and train-related incidents. Lastly, for ridership data, we examine metrics such as wait times and ridership. These datasets provide us a comprehensive overview of the subway performance.</p>
+</section>
+<section id="data-limitation" class="level2">
+<h2 class="anchored" data-anchor-id="data-limitation">Data Limitation</h2>
+<p>The datasets are strong for operational and performance analysis and are up-to-date but may be biased because the datasets focus only on 2020 to 2024, excluding deeper pre-pandemic trends, longer-term recovery patterns, and the full year of 2024. Additionally, the datasets do not include some external factors, such as policy, economics, etc., and they lack exploration of differences in infrastructure or track quality between subway lines.</p>
+</section>
+<section id="analysis-addressing-motivating-questions" class="level2">
+<h2 class="anchored" data-anchor-id="analysis-addressing-motivating-questions">Analysis addressing motivating questions</h2>
+<p>The analysis explores NYC subway trends from 2020 to 2024, focusing on incidents, performance, and ridership to answer key questions about system safety, efficiency, and capacity during and after the COVID-19 pandemic.</p>
+</section>
+<section id="incidents-safety-concerns" class="level2">
+<h2 class="anchored" data-anchor-id="incidents-safety-concerns">Incidents &amp; Safety Concerns:</h2>
+<p>Tracking reported incidents over the study period reveals the most common safety issues on subway lines. Temporal patterns show how incident frequency and types shifted during COVID-19 and post-pandemic recovery. These insights help contextualize changes in rider behavior and vulnerabilities in system operations during periods of fluctuating ridership.</p>
+</section>
+<section id="subway-performance" class="level2">
+<h2 class="anchored" data-anchor-id="subway-performance">Subway Performance:</h2>
+<p>Performance metrics such as terminal on-time rates and delay patterns during peak and off-peak hours are analyzed to assess operational efficiency. Comparing COVID and post-COVID periods shows how service reliability evolved as ridership recovered. Identifying high-performing lines and those with frequent delays highlights opportunities to enhance service reliability under varying demand conditions.</p>
+</section>
+<section id="key-findings-and-insights" class="level2">
+<h2 class="anchored" data-anchor-id="key-findings-and-insights">Key Findings and Insights</h2>
+<section id="comparative-analysis-covid-vs.-post-covid-incident-distribution" class="level3">
+<h3 class="anchored" data-anchor-id="comparative-analysis-covid-vs.-post-covid-incident-distribution">Comparative Analysis: COVID vs.&nbsp;Post-COVID Incident Distribution</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Incident Reasons During COVID Period.jpg" class="img-fluid figure-img"></p>
+<figcaption>MTA Incident During COVID</figcaption>
+</figure>
 </div>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#peak hours are weekdays (1) and off-peak hours are weekends (2)</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>MTA_train_delays <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">|&gt;</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">period =</span> <span class="fu">ifelse</span>(day_type <span class="sc">==</span> <span class="dv">1</span>, <span class="st">"Peak"</span>, <span class="st">"Off-Peak"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Incident Reasons Post COVID Period.jpg" class="img-fluid figure-img"></p>
+<figcaption>MTA Incident Post COVID</figcaption>
+</figure>
 </div>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>performance <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(line) <span class="sc">%&gt;%</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_delays =</span> <span class="fu">sum</span>(delays, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">'drop'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)  <span class="co"># For date manipulation</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the period column based on day_type and remove 'Systemwide' from line</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>MTA_train_delays <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">period =</span> <span class="fu">ifelse</span>(day_type <span class="sc">==</span> <span class="dv">1</span>, <span class="st">"Peak"</span>, <span class="st">"Off-Peak"</span>),</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">year =</span> <span class="fu">year</span>(month)) <span class="sc">%&gt;%</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(line <span class="sc">!=</span> <span class="st">"Systemwide"</span>)  <span class="co"># Remove 'Systemwide' from line</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Separate the data into COVID (2020-2021) and post-COVID (2022-2024)</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>MTA_train_delays_covid <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">&gt;=</span> <span class="dv">2020</span> <span class="sc">&amp;</span> year <span class="sc">&lt;=</span> <span class="dv">2021</span>)</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>MTA_train_delays_post_covid <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">&gt;=</span> <span class="dv">2022</span> <span class="sc">&amp;</span> year <span class="sc">&lt;=</span> <span class="dv">2024</span>)</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Performance analysis for COVID period</span></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>performance_covid <span class="ot">&lt;-</span> MTA_train_delays_covid <span class="sc">%&gt;%</span></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(line, period) <span class="sc">%&gt;%</span></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_delays =</span> <span class="fu">sum</span>(delays, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">'drop'</span>)</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Performance analysis for post-COVID period</span></span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>performance_post_covid <span class="ot">&lt;-</span> MTA_train_delays_post_covid <span class="sc">%&gt;%</span></span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(line, period) <span class="sc">%&gt;%</span></span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_delays =</span> <span class="fu">sum</span>(delays, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">'drop'</span>)</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Best and worst performers during COVID peak</span></span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>lowest_delay_covid <span class="ot">&lt;-</span> performance_covid <span class="sc">%&gt;%</span></span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(period <span class="sc">==</span> <span class="st">"Peak"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(total_delays) <span class="sc">%&gt;%</span></span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>highest_delay_covid <span class="ot">&lt;-</span> performance_covid <span class="sc">%&gt;%</span></span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(period <span class="sc">==</span> <span class="st">"Peak"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(total_delays)) <span class="sc">%&gt;%</span></span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="co"># Best and worst performers during post-COVID peak</span></span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>lowest_delay_post_covid <span class="ot">&lt;-</span> performance_post_covid <span class="sc">%&gt;%</span></span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(period <span class="sc">==</span> <span class="st">"Peak"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(total_delays) <span class="sc">%&gt;%</span></span>
-<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span>
-<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>highest_delay_post_covid <span class="ot">&lt;-</span> performance_post_covid <span class="sc">%&gt;%</span></span>
-<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(period <span class="sc">==</span> <span class="st">"Peak"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(total_delays)) <span class="sc">%&gt;%</span></span>
-<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span>
-<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a><span class="co"># Create tables for COVID period</span></span>
-<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>best_peak_table_covid <span class="ot">&lt;-</span> <span class="fu">kable</span>(lowest_delay_covid, <span class="at">caption =</span> <span class="st">"Best Performer During COVID Peak Period"</span>)</span>
-<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>worst_peak_table_covid <span class="ot">&lt;-</span> <span class="fu">kable</span>(highest_delay_covid, <span class="at">caption =</span> <span class="st">"Worst Performer During COVID Peak Period"</span>)</span>
-<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a><span class="co"># Create tables for post-COVID period</span></span>
-<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>best_peak_table_post_covid <span class="ot">&lt;-</span> <span class="fu">kable</span>(lowest_delay_covid, <span class="at">caption =</span> <span class="st">"Best Performer During Post-COVID Peak Period"</span>)</span>
-<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>worst_peak_table_post_covid <span class="ot">&lt;-</span> <span class="fu">kable</span>(highest_delay_covid, <span class="at">caption =</span> <span class="st">"Worst Performer During Post-COVID Peak Period"</span>)</span>
-<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a><span class="co"># Print the tables</span></span>
-<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(best_peak_table_covid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-
-Table: Best Performer During COVID Peak Period
-
-|line   |period | total_delays|
-|:------|:------|------------:|
-|S Fkln |Peak   |          591|</code></pre>
-</div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(worst_peak_table_covid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-
-Table: Worst Performer During COVID Peak Period
-
-|line |period | total_delays|
-|:----|:------|------------:|
-|N    |Peak   |        47600|</code></pre>
-</div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(best_peak_table_post_covid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-
-Table: Best Performer During Post-COVID Peak Period
-
-|line   |period | total_delays|
-|:------|:------|------------:|
-|S Fkln |Peak   |          591|</code></pre>
-</div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(worst_peak_table_post_covid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-
-Table: Worst Performer During Post-COVID Peak Period
-
-|line |period | total_delays|
-|:----|:------|------------:|
-|N    |Peak   |        47600|</code></pre>
-</div>
-</div>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure month is in date format</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>MTA_train_delays<span class="sc">$</span>month <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(MTA_train_delays<span class="sc">$</span>month)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract year and summarize total delays by year and line, excluding 'Systemwide'</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>delay_summary <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">year</span>(month)) <span class="sc">%&gt;%</span>  <span class="co"># Extract the year</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(line <span class="sc">!=</span> <span class="st">"Systemwide"</span>) <span class="sc">%&gt;%</span>  <span class="co"># Exclude subway systemwide</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(year, line) <span class="sc">%&gt;%</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_delays =</span> <span class="fu">sum</span>(delays, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">'drop'</span>)</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a combined dataset for COVID and Post-COVID periods</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>combined_summary <span class="ot">&lt;-</span> delay_summary <span class="sc">%&gt;%</span></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">period =</span> <span class="fu">ifelse</span>(year <span class="sc">&gt;=</span> <span class="dv">2020</span> <span class="sc">&amp;</span> year <span class="sc">&lt;=</span> <span class="dv">2021</span>, <span class="st">"COVID"</span>, <span class="st">"Post-COVID"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(period, line) <span class="sc">%&gt;%</span></span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_delays =</span> <span class="fu">sum</span>(total_delays), <span class="at">.groups =</span> <span class="st">'drop'</span>)</span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the animated bar chart</span></span>
-<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>animated_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(combined_summary, <span class="fu">aes</span>(<span class="at">x =</span> line, <span class="at">y =</span> total_delays, <span class="at">fill =</span> period)) <span class="sc">+</span></span>
-<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
-<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Total Delays by Subway Line (COVID vs. Post-COVID)"</span>,</span>
-<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Subway Line"</span>,</span>
-<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Total Delays"</span>,</span>
-<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>       <span class="at">fill =</span> <span class="st">"Period"</span>) <span class="sc">+</span></span>
-<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transition_states</span>(period, <span class="at">transition_length =</span> <span class="dv">2</span>, <span class="at">state_length =</span> <span class="dv">1</span>, <span class="at">wrap =</span> <span class="cn">TRUE</span>) <span class="sc">+</span>  <span class="co"># Transition by period</span></span>
-<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">enter_fade</span>() <span class="sc">+</span>  <span class="co"># Fade in when the bar appears</span></span>
-<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">exit_fade</span>()    <span class="co"># Fade out when it disappears</span></span>
-<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Save the animation as a GIF</span></span>
-<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>output_gif_path <span class="ot">&lt;-</span> <span class="st">"animated_bar_chart.gif"</span></span>
-<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a><span class="fu">anim_save</span>(output_gif_path, animated_plot, <span class="at">renderer =</span> <span class="fu">gifski_renderer</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
+<p>To ensure a balanced analysis, both the COVID (2020-2021) and post-COVID (2022-2023) periods are scaled to two years each. Pie charts will illustrate the distribution of incident categories for each period. During the COVID period, signal-related incidents were most prevalent, comprising 33.2% of all incidents, followed by persons on trackbed/police/medical incidents at 30.2%. Other notable categories included track-related incidents (10.8%) and subway car incidents (8.9%). These distributions highlight the operational challenges of maintaining reliability and addressing immediate safety concerns during the pandemic.</p>
+<p>Post-COVID, the distribution shifts significantly. Persons on trackbed/police/medical incidents rose to 33.6%, becoming the largest category, while signal-related incidents decreased to 24.6%. Track-related incidents surged to 18.2%, reflecting emerging infrastructure maintenance challenges. These shifts indicate evolving priorities for MTA as the system transitions to a recovery phase, emphasizing the need for focused interventions to address rising safety and infrastructure issues.</p>
+<p>Please go to this <a href="https://yantingzhao11.github.io/STA9750-2024-FALL/individualreport.html">link</a> for more detailed analysis.</p>
+</section>
+<section id="analysis-of-mta-subway-line-performance-peak-vs.-off-peak-delays" class="level3">
+<h3 class="anchored" data-anchor-id="analysis-of-mta-subway-line-performance-peak-vs.-off-peak-delays">Analysis of MTA Subway Line Performance: Peak vs.&nbsp;Off-Peak Delays</h3>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="animated_bar_chart.gif" class="img-fluid figure-img"></p>
 <figcaption>MTA Train Delays Animation</figcaption>
 </figure>
 </div>
-<p>Key Insights:</p>
-<p>The N, F, 6, and A lines experienced the greatest increase in delays, with their delays nearly doubling.</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)  <span class="co"># For pivot_wider</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure month is in date format</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>MTA_train_delays<span class="sc">$</span>month <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(MTA_train_delays<span class="sc">$</span>month)</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract year and summarize total delays by year and line, excluding 'Systemwide'</span></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>delay_summary <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">year</span>(month)) <span class="sc">%&gt;%</span>  <span class="co"># Extract the year</span></span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(line <span class="sc">!=</span> <span class="st">"Systemwide"</span>) <span class="sc">%&gt;%</span>  <span class="co"># Exclude subway systemwide</span></span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(year, line) <span class="sc">%&gt;%</span></span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_delays =</span> <span class="fu">sum</span>(delays, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">'drop'</span>)</span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a summary for COVID and post-COVID periods</span></span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>change_summary <span class="ot">&lt;-</span> delay_summary <span class="sc">%&gt;%</span></span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">period =</span> <span class="fu">ifelse</span>(year <span class="sc">&gt;=</span> <span class="dv">2020</span> <span class="sc">&amp;</span> year <span class="sc">&lt;=</span> <span class="dv">2021</span>, <span class="st">"COVID"</span>, <span class="st">"Post-COVID"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(line, period) <span class="sc">%&gt;%</span></span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_delays =</span> <span class="fu">sum</span>(total_delays), <span class="at">.groups =</span> <span class="st">'drop'</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> period, <span class="at">values_from =</span> total_delays, <span class="at">values_fill =</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">percent_change =</span> (<span class="st">`</span><span class="at">Post-COVID</span><span class="st">`</span> <span class="sc">-</span> <span class="st">`</span><span class="at">COVID</span><span class="st">`</span>) <span class="sc">/</span> <span class="st">`</span><span class="at">COVID</span><span class="st">`</span> <span class="sc">*</span> <span class="dv">100</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(line, percent_change)</span>
-<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a line graph</span></span>
-<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(change_summary, <span class="fu">aes</span>(<span class="at">x =</span> line, <span class="at">y =</span> percent_change, <span class="at">group =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
-<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
-<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
-<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Percent Change in Delays: COVID vs. Post-COVID"</span>,</span>
-<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Subway Line"</span>,</span>
-<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Percent Change in Delays (%)"</span>) <span class="sc">+</span></span>
-<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">percent_format</span>(<span class="at">scale =</span> <span class="dv">1</span>))  <span class="co"># Format y-axis as percentage</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="final_project_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure month is in date format</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>MTA_train_delays<span class="sc">$</span>month <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(MTA_train_delays<span class="sc">$</span>month)</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate total delays for each subway line per year</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>frequency_summary_per_year <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">year</span>(month)) <span class="sc">%&gt;%</span>  <span class="co"># Extract the year</span></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(year, line) <span class="sc">%&gt;%</span></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_delays =</span> <span class="fu">sum</span>(delays, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">'drop'</span>)</span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Get top 10 lines with highest delays for each year</span></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>top_delays_per_year <span class="ot">&lt;-</span> frequency_summary_per_year <span class="sc">%&gt;%</span></span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(year) <span class="sc">%&gt;%</span></span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_max</span>(total_delays, <span class="at">n =</span> <span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()  <span class="co"># Ungroup for easier printing/viewing</span></span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a line graph for the top subway lines with delays over the years</span></span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(top_delays_per_year, <span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> total_delays, <span class="at">color =</span> line, <span class="at">group =</span> line)) <span class="sc">+</span></span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span>  <span class="co"># Line for each subway line</span></span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span>  <span class="co"># Points for each data point</span></span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Total Delays for Top Subway Lines Over the Years"</span>,</span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Year"</span>,</span>
-<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Total Delays"</span>) <span class="sc">+</span></span>
-<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">unique</span>(top_delays_per_year<span class="sc">$</span>year)) <span class="sc">+</span>  <span class="co"># Customize x-axis</span></span>
-<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>))  <span class="co"># Adjust x-axis text</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="final_project_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate total delays for each reporting category</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>reporting_summary <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(reporting_category) <span class="sc">%&gt;%</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_delays =</span> <span class="fu">sum</span>(delays, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">'drop'</span>)</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a bar plot of total delays by reporting category with numbers inside the bins</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(reporting_summary, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(reporting_category, total_delays), <span class="at">y =</span> total_delays)) <span class="sc">+</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="at">fill =</span> <span class="st">"#FF7F50"</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span>  <span class="co"># Make bars semi-transparent</span></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> total_delays), <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">4</span>, <span class="at">vjust =</span> <span class="fl">0.5</span>) <span class="sc">+</span>  <span class="co"># Place numbers inside bars</span></span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Total Delays by Reporting Category"</span>,</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Reporting Category"</span>,</span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Total Delays"</span>) <span class="sc">+</span></span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span>  <span class="co"># Flip coordinates for better readability</span></span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.margin =</span> <span class="fu">margin</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">3</span>))  <span class="co"># Increase left margin for space</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="final_project_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove NA values from subcategory and calculate total delays for each subcategory</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>subcategory_summary <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(subcategory)) <span class="sc">%&gt;%</span>  <span class="co"># Remove NA values in the subcategory column</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(subcategory) <span class="sc">%&gt;%</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_delays =</span> <span class="fu">sum</span>(delays, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">'drop'</span>)</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Get the top 10 subcategories with the most delays</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>top_10_subcategories <span class="ot">&lt;-</span> subcategory_summary <span class="sc">%&gt;%</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(total_delays)) <span class="sc">%&gt;%</span></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">10</span>)</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a bar plot of total delays for the top 10 subcategories</span></span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(top_10_subcategories, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(subcategory, total_delays), <span class="at">y =</span> total_delays)) <span class="sc">+</span></span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="at">fill =</span> <span class="st">"steelblue"</span>) <span class="sc">+</span></span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Top 10 Subcategories with Most Delays"</span>,</span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Subcategory"</span>,</span>
-<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Total Delays"</span>) <span class="sc">+</span></span>
-<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>()  <span class="co"># Flip coordinates for better readability</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="final_project_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Classify into Peak and Off-Peak</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>MTA_train_delays <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">time_period =</span> <span class="fu">ifelse</span>(day_type <span class="sc">==</span> <span class="dv">1</span>, <span class="st">"Peak"</span>, <span class="st">"Off-Peak"</span>))</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Summarize total delays by month and time period</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>total_delays_summary <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">month =</span> <span class="fu">floor_date</span>(month, <span class="st">"month"</span>)) <span class="sc">%&gt;%</span>  <span class="co"># Ensure month is in proper format</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(month, time_period) <span class="sc">%&gt;%</span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_delays =</span> <span class="fu">sum</span>(delays, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">'drop'</span>)</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a line plot of total delays by time period and animate by month</span></span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>animated_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(total_delays_summary, <span class="fu">aes</span>(<span class="at">x =</span> month, <span class="at">y =</span> total_delays, <span class="at">color =</span> time_period, <span class="at">group =</span> time_period)) <span class="sc">+</span></span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Trend of Total Delays per Peak &amp; Off-Peak Times"</span>,</span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Year"</span>,</span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Total Delays"</span>,</span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="st">"Time Period"</span>) <span class="sc">+</span></span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transition_reveal</span>(month) <span class="sc">+</span>  <span class="co"># Reveal the lines progressively across the months</span></span>
-<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">enter_fade</span>() <span class="sc">+</span>  <span class="co"># Fade in at the start</span></span>
-<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">exit_fade</span>()    <span class="co"># Fade out at the end</span></span>
-<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Set the output GIF path</span></span>
-<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>output_gif_path <span class="ot">&lt;-</span> <span class="st">"total_delays_animation.gif"</span></span>
-<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Save the animation as a GIF with gifski_renderer</span></span>
-<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a><span class="fu">anim_save</span>(output_gif_path, animated_plot, <span class="at">renderer =</span> <span class="fu">gifski_renderer</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
+<p>The analysis of subway delay trends, comparing the COVID and Post-COVID periods, highlights significant changes in the performance of various subway lines. The animated bar chart offers a visual comparison of total delays for each subway line across these two timeframes. Delays generally increased for most subway lines, especially as New York City began to reopen. Certain lines, such as the N, F, 6, and A, experienced substantial increases in delays, with some nearly doubling. For example, delays on the N train surged from 60,073 to 100,434 after the pandemic, marking a 67.19% increase. Similarly, the 6 train delays rose from 41,200 to 98,141. This suggests that while delays were reduced during the shutdown, the return to full service and higher ridership in the post-pandemic period has led to an uptick in disruptions.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="total_delays_animation.gif" class="img-fluid figure-img"></p>
 <figcaption>MTA Train Delays Line Graph</figcaption>
 </figure>
 </div>
-<p>Key findings: - Delays dropped in the first quarter of 2020 due to the NYC shutdown. - Delays surged to their highest point in mid-2021 as NYC began to reopen</p>
+<p>Furthermore,the animated plot was created to show how total delays changed monthly for both peak and off-peak periods. The plot revealed several trends, including a significant drop in delays during the early months of 2020, followed by a surge in delays as the city reopened and ridership increased. First quarter of 2020 saw a significant drop in delays due to the NYC shutdown in response to the pandemic. Mid-2021 marked the highest surge in delays, coinciding with the city’s phased reopening and increased ridership.</p>
+<p>Please go to this <a href="https://chloe384.github.io/STA9750-2024-FALL/individual.html">link</a> for more detailed analysis.</p>
+</section>
+<section id="how-have-safety-incidents-persons-on-trackbedpolicemedical-reported-to-the-mta-changed-between-covid-and-post-covid" class="level3">
+<h3 class="anchored" data-anchor-id="how-have-safety-incidents-persons-on-trackbedpolicemedical-reported-to-the-mta-changed-between-covid-and-post-covid">How have safety incidents (Persons on Trackbed/Police/Medical) reported to the MTA changed between COVID and Post-COVID?</h3>
+<p>The analysis focuses on the persons on trackbed/police/medical category from incidents and compares the average annual number of safety incidents across numbered subway lines and lettered subway lines.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="numbered_line.png" class="img-fluid figure-img"></p>
+<figcaption>Numbered Subway Lines</figcaption>
+</figure>
+</div>
+<p>For numbered subway lines, the bar chart shows that while the average annual number of safety incidents is decreased for the 6 and 4 train, it is increased on all other lines, so the overall trends from covid to post-covid time periods increase by 13.61%. The 6 train has the highest average incidents during both periods but decreased to 9.3 in post-COVID. The 5 train and 7 train have increase the most of almost any numbered subway line.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="lettered_line.png" class="img-fluid figure-img"></p>
+<figcaption>Lettered Subway Lines</figcaption>
+</figure>
+</div>
+<p>For lettered subway lines, the numbers of annual average safety incidents of almost all subway increase, except the R and D train, with increase by 34%. The A, E, F, and N trains exhibit a significant increase from an average of 4 incidents during COVID to 7.3 incidents post-COVID, which increase the most across all lines.</p>
+<p>Overall, almost all subway lines face serious safety problems. With everyone returning to normal life from the post-covid recovery, it will pose a threat to rider safety if improvements are not made to the safety incident problem. Please go to this <a href="https://haolinnn.github.io/STA9750-2024-FALL/individual.html">link</a> for more detailed analysis.</p>
+</section>
+<section id="what-is-the-trend-in-terminal-on-time-performance-from-2020-to-2024-how-does-performance-differ-between-the-covid-period-and-post-covid-recovery" class="level3">
+<h3 class="anchored" data-anchor-id="what-is-the-trend-in-terminal-on-time-performance-from-2020-to-2024-how-does-performance-differ-between-the-covid-period-and-post-covid-recovery">What is the trend in terminal on-time performance from 2020 to 2024? How does performance differ between the COVID period and post-COVID recovery ?</h3>
+</section>
+<section id="trend-of-on-terminal-by-borough" class="level3">
+<h3 class="anchored" data-anchor-id="trend-of-on-terminal-by-borough">Trend of On-terminal by Borough</h3>
+<p>The graph provides a comparative analysis of average terminal on-time performance by borou gh from 2020 to 2024. It highlights variations in performance across the Bronx, Brooklyn, Manhattan, and Queens. We aim to uncover how delays and safety incidents may have influenced overall efficiency. This will help pinpoint areas of operational strain and provide insights for improving performance and reliability across the subway system.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Exclude specific lines (S Fkln, S 42nd, S Rock) from the dataset</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>MTA_train_delays <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>line <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"S Fkln"</span>, <span class="st">"S 42nd"</span>, <span class="st">"S Rock"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">period =</span> <span class="fu">ifelse</span>(day_type <span class="sc">==</span> <span class="dv">1</span>, <span class="st">"Peak"</span>, <span class="st">"Off-Peak"</span>),</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">year =</span> <span class="fu">year</span>(month)) <span class="sc">%&gt;%</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(line <span class="sc">!=</span> <span class="st">"Systemwide"</span>)  <span class="co"># Remove 'Systemwide' from line</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Performance analysis during peak period</span></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>performance_peak <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(period <span class="sc">==</span> <span class="st">"Peak"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(line) <span class="sc">%&gt;%</span></span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_delays =</span> <span class="fu">sum</span>(delays, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">'drop'</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(total_delays)) <span class="sc">%&gt;%</span></span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">5</span>)  <span class="co"># Top 5 lines with the highest delays</span></span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the top 5 subway lines with the highest delays during peak time</span></span>
-<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
-<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(performance_peak, </span>
-<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">caption =</span> <span class="st">"Top 5 Subway Lines with Highest Delays During Peak Time"</span>,</span>
-<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Subway Line"</span>, <span class="st">"Total Delays"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(<span class="st">"animated_borough_performance.gif"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<table class="caption-top table table-sm table-striped small">
-<caption>Top 5 Subway Lines with Highest Delays During Peak Time</caption>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Subway Line</th>
-<th style="text-align: right;">Total Delays</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">N</td>
-<td style="text-align: right;">124700</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">F</td>
-<td style="text-align: right;">115696</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">A</td>
-<td style="text-align: right;">113275</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">6</td>
-<td style="text-align: right;">113036</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">E</td>
-<td style="text-align: right;">107263</td>
-</tr>
-</tbody>
-</table>
+<div>
+<figure class="figure">
+<p><img src="animated_borough_performance.gif" class="img-fluid figure-img"></p>
+</figure>
 </div>
 </div>
+</div>
+<p>The graph highlights borough-specific trends in on-time performance from 2020 to 2024, with a sharp decline in 2022 due to post-pandemic challenges. Queens consistently performed better, indicating greater resilience, while Brooklyn and the Bronx showed slower recovery and lower efficiency.The findings emphasize the need for targeted efforts to address delays, safety concerns, and operational inefficiencies.</p>
+</section>
+<section id="seasonal-impact" class="level3">
+<h3 class="anchored" data-anchor-id="seasonal-impact">Seasonal Impact</h3>
+<p>Let’s identify seasonal and monthly trends. The goal is to highlight how external factors, such as weather and operational challenges, impact system reliability.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Exclude specific lines (S Fkln, S 42nd, S Rock) from the dataset</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>MTA_train_delays <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>line <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"S Fkln"</span>, <span class="st">"S 42nd"</span>, <span class="st">"S Rock"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">period =</span> <span class="fu">ifelse</span>(day_type <span class="sc">==</span> <span class="dv">1</span>, <span class="st">"Peak"</span>, <span class="st">"Off-Peak"</span>),</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">year =</span> <span class="fu">year</span>(month)) <span class="sc">%&gt;%</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(line <span class="sc">!=</span> <span class="st">"Systemwide"</span>)  <span class="co"># Remove 'Systemwide' from line</span></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Performance analysis during off-peak period (corrected variable name)</span></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>performance_off_peak <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(period <span class="sc">==</span> <span class="st">"Off-Peak"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(line) <span class="sc">%&gt;%</span></span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_delays =</span> <span class="fu">sum</span>(delays, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">'drop'</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(total_delays)) <span class="sc">%&gt;%</span></span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">5</span>)  <span class="co"># Top 5 lines with the highest delays during off-peak time</span></span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the top 5 subway lines with the highest delays during off-peak time</span></span>
-<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
-<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(performance_off_peak, </span>
-<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">caption =</span> <span class="st">"Top 5 Subway Lines with Highest Delays During Off-Peak Time"</span>,</span>
-<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Subway Line"</span>, <span class="st">"Total Delays"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(<span class="st">"Weather_Impact.png"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<table class="caption-top table table-sm table-striped small">
-<caption>Top 5 Subway Lines with Highest Delays During Off-Peak Time</caption>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Subway Line</th>
-<th style="text-align: right;">Total Delays</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">2</td>
-<td style="text-align: right;">43004</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">A</td>
-<td style="text-align: right;">41458</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">N</td>
-<td style="text-align: right;">35807</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">4</td>
-<td style="text-align: right;">30958</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Q</td>
-<td style="text-align: right;">28446</td>
-</tr>
-</tbody>
-</table>
+<div>
+<figure class="figure">
+<p><img src="Weather_Impact.png" class="img-fluid figure-img" width="468"></p>
+</figure>
 </div>
 </div>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Exclude specific lines (S Fkln, S 42nd, S Rock) from the dataset</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>MTA_train_delays <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>line <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"S Fkln"</span>, <span class="st">"S 42nd"</span>, <span class="st">"S Rock"</span>, <span class="st">"JZ"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">period =</span> <span class="fu">ifelse</span>(day_type <span class="sc">==</span> <span class="dv">1</span>, <span class="st">"Peak"</span>, <span class="st">"Off-Peak"</span>),</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">year =</span> <span class="fu">year</span>(month)) <span class="sc">%&gt;%</span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(line <span class="sc">!=</span> <span class="st">"Systemwide"</span>)  <span class="co"># Remove 'Systemwide' from line</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Performance analysis during peak period</span></span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>performance_peak_lowest <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(period <span class="sc">==</span> <span class="st">"Peak"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(line) <span class="sc">%&gt;%</span></span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_delays =</span> <span class="fu">sum</span>(delays, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">'drop'</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(total_delays) <span class="sc">%&gt;%</span></span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">5</span>)  <span class="co"># Top 5 lines with the lowest delays</span></span>
-<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the top 5 subway lines with the lowest delays during peak time</span></span>
-<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
-<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(performance_peak_lowest, </span>
-<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">caption =</span> <span class="st">"Top 5 Subway Lines with Lowest Delays During Peak Time"</span>,</span>
-<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Subway Line"</span>, <span class="st">"Total Delays"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output-display">
-<table class="caption-top table table-sm table-striped small">
-<caption>Top 5 Subway Lines with Lowest Delays During Peak Time</caption>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Subway Line</th>
-<th style="text-align: right;">Total Delays</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">G</td>
-<td style="text-align: right;">42623</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">3</td>
-<td style="text-align: right;">45300</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">L</td>
-<td style="text-align: right;">47567</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">M</td>
-<td style="text-align: right;">47573</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">C</td>
-<td style="text-align: right;">56065</td>
-</tr>
-</tbody>
-</table>
 </div>
-</div>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Exclude specific lines (S Fkln, S 42nd, S Rock) from the dataset</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>MTA_train_delays <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>line <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"S Fkln"</span>, <span class="st">"S 42nd"</span>, <span class="st">"S Rock"</span>, <span class="st">"JZ"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">period =</span> <span class="fu">ifelse</span>(day_type <span class="sc">==</span> <span class="dv">1</span>, <span class="st">"Peak"</span>, <span class="st">"Off-Peak"</span>),</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">year =</span> <span class="fu">year</span>(month)) <span class="sc">%&gt;%</span></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(line <span class="sc">!=</span> <span class="st">"Systemwide"</span>)  <span class="co"># Remove 'Systemwide' from line</span></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Performance analysis during off-peak period (lowest delays)</span></span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>performance_off_peak_lowest <span class="ot">&lt;-</span> MTA_train_delays <span class="sc">%&gt;%</span></span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(period <span class="sc">==</span> <span class="st">"Off-Peak"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(line) <span class="sc">%&gt;%</span></span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_delays =</span> <span class="fu">sum</span>(delays, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">'drop'</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(total_delays) <span class="sc">%&gt;%</span></span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">5</span>)  <span class="co"># Top 5 lines with the lowest delays during off-peak time</span></span>
-<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the top 5 subway lines with the lowest delays during off-peak time</span></span>
-<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
-<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(performance_off_peak_lowest, </span>
-<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">caption =</span> <span class="st">"Top 5 Subway Lines with Lowest Delays During Off-Peak Time"</span>,</span>
-<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Subway Line"</span>, <span class="st">"Total Delays"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output-display">
-<table class="caption-top table table-sm table-striped small">
-<caption>Top 5 Subway Lines with Lowest Delays During Off-Peak Time</caption>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Subway Line</th>
-<th style="text-align: right;">Total Delays</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">M</td>
-<td style="text-align: right;">6132</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">G</td>
-<td style="text-align: right;">11563</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">5</td>
-<td style="text-align: right;">12681</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">L</td>
-<td style="text-align: right;">14007</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: right;">16880</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure all dataframes have the same number of rows (top 5)</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>max_rows <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="fu">nrow</span>(performance_peak), <span class="fu">nrow</span>(performance_off_peak),</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>                <span class="fu">nrow</span>(performance_peak_lowest), <span class="fu">nrow</span>(performance_off_peak_lowest))</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Pad with NAs if needed, ensure that the new tibble has the correct column types</span></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>performance_peak <span class="ot">&lt;-</span> performance_peak <span class="sc">%&gt;%</span></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(<span class="fu">tibble</span>(<span class="at">line =</span> <span class="fu">rep</span>(<span class="cn">NA_character_</span>, max_rows <span class="sc">-</span> <span class="fu">nrow</span>(performance_peak)),</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>                   <span class="at">total_delays =</span> <span class="fu">rep</span>(<span class="cn">NA</span>, max_rows <span class="sc">-</span> <span class="fu">nrow</span>(performance_peak))))</span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>performance_off_peak <span class="ot">&lt;-</span> performance_off_peak <span class="sc">%&gt;%</span></span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(<span class="fu">tibble</span>(<span class="at">line =</span> <span class="fu">rep</span>(<span class="cn">NA_character_</span>, max_rows <span class="sc">-</span> <span class="fu">nrow</span>(performance_off_peak)),</span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>                   <span class="at">total_delays =</span> <span class="fu">rep</span>(<span class="cn">NA</span>, max_rows <span class="sc">-</span> <span class="fu">nrow</span>(performance_off_peak))))</span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>performance_peak_lowest <span class="ot">&lt;-</span> performance_peak_lowest <span class="sc">%&gt;%</span></span>
-<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(<span class="fu">tibble</span>(<span class="at">line =</span> <span class="fu">rep</span>(<span class="cn">NA_character_</span>, max_rows <span class="sc">-</span> <span class="fu">nrow</span>(performance_peak_lowest)),</span>
-<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>                   <span class="at">total_delays =</span> <span class="fu">rep</span>(<span class="cn">NA</span>, max_rows <span class="sc">-</span> <span class="fu">nrow</span>(performance_peak_lowest))))</span>
-<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>performance_off_peak_lowest <span class="ot">&lt;-</span> performance_off_peak_lowest <span class="sc">%&gt;%</span></span>
-<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(<span class="fu">tibble</span>(<span class="at">line =</span> <span class="fu">rep</span>(<span class="cn">NA_character_</span>, max_rows <span class="sc">-</span> <span class="fu">nrow</span>(performance_off_peak_lowest)),</span>
-<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>                   <span class="at">total_delays =</span> <span class="fu">rep</span>(<span class="cn">NA</span>, max_rows <span class="sc">-</span> <span class="fu">nrow</span>(performance_off_peak_lowest))))</span>
-<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Now combine all four datasets into one large table</span></span>
-<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>combined_performance <span class="ot">&lt;-</span> <span class="fu">bind_cols</span>(</span>
-<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>  performance_peak <span class="sc">%&gt;%</span></span>
-<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rename</span>(<span class="at">Peak_Line =</span> line, <span class="at">Peak_Highest_Delays =</span> total_delays),</span>
-<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>  performance_off_peak <span class="sc">%&gt;%</span></span>
-<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rename</span>(<span class="at">Off_Peak_Line =</span> line, <span class="at">Off_Peak_Highest_Delays =</span> total_delays),</span>
-<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a>  performance_peak_lowest <span class="sc">%&gt;%</span></span>
-<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rename</span>(<span class="at">Peak_Lowest_Line =</span> line, <span class="at">Peak_Lowest_Delays =</span> total_delays),</span>
-<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a>  performance_off_peak_lowest <span class="sc">%&gt;%</span></span>
-<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rename</span>(<span class="at">Off_Peak_Lowest_Line =</span> line, <span class="at">Off_Peak_Lowest_Delays =</span> total_delays)</span>
-<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the combined table with peak and off-peak delay data</span></span>
-<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
-<span id="cb22-36"><a href="#cb22-36" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(combined_performance, </span>
-<span id="cb22-37"><a href="#cb22-37" aria-hidden="true" tabindex="-1"></a>      <span class="at">caption =</span> <span class="st">"Top 5 Subway Lines with Highest and Lowest Delays During Peak and Off-Peak Times"</span>,</span>
-<span id="cb22-38"><a href="#cb22-38" aria-hidden="true" tabindex="-1"></a>      <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Peak Line"</span>, <span class="st">"Peak Highest Delays"</span>, <span class="st">"Off-Peak Line"</span>, <span class="st">"Off-Peak Highest Delays"</span>,</span>
-<span id="cb22-39"><a href="#cb22-39" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"Peak Lowest Line"</span>, <span class="st">"Peak Lowest Delays"</span>, <span class="st">"Off-Peak Lowest Line"</span>, <span class="st">"Off-Peak Lowest Delays"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output-display">
-<table class="caption-top table table-sm table-striped small">
-<caption>Top 5 Subway Lines with Highest and Lowest Delays During Peak and Off-Peak Times</caption>
-<colgroup>
-<col style="width: 6%">
-<col style="width: 13%">
-<col style="width: 9%">
-<col style="width: 16%">
-<col style="width: 11%">
-<col style="width: 12%">
-<col style="width: 14%">
-<col style="width: 15%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Peak Line</th>
-<th style="text-align: right;">Peak Highest Delays</th>
-<th style="text-align: left;">Off-Peak Line</th>
-<th style="text-align: right;">Off-Peak Highest Delays</th>
-<th style="text-align: left;">Peak Lowest Line</th>
-<th style="text-align: right;">Peak Lowest Delays</th>
-<th style="text-align: left;">Off-Peak Lowest Line</th>
-<th style="text-align: right;">Off-Peak Lowest Delays</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">N</td>
-<td style="text-align: right;">124700</td>
-<td style="text-align: left;">2</td>
-<td style="text-align: right;">43004</td>
-<td style="text-align: left;">G</td>
-<td style="text-align: right;">42623</td>
-<td style="text-align: left;">M</td>
-<td style="text-align: right;">6132</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">F</td>
-<td style="text-align: right;">115696</td>
-<td style="text-align: left;">A</td>
-<td style="text-align: right;">41458</td>
-<td style="text-align: left;">3</td>
-<td style="text-align: right;">45300</td>
-<td style="text-align: left;">G</td>
-<td style="text-align: right;">11563</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">A</td>
-<td style="text-align: right;">113275</td>
-<td style="text-align: left;">N</td>
-<td style="text-align: right;">35807</td>
-<td style="text-align: left;">L</td>
-<td style="text-align: right;">47567</td>
-<td style="text-align: left;">5</td>
-<td style="text-align: right;">12681</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">6</td>
-<td style="text-align: right;">113036</td>
-<td style="text-align: left;">4</td>
-<td style="text-align: right;">30958</td>
-<td style="text-align: left;">M</td>
-<td style="text-align: right;">47573</td>
-<td style="text-align: left;">L</td>
-<td style="text-align: right;">14007</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">E</td>
-<td style="text-align: right;">107263</td>
-<td style="text-align: left;">Q</td>
-<td style="text-align: right;">28446</td>
-<td style="text-align: left;">C</td>
-<td style="text-align: right;">56065</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: right;">16880</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<p>Key Insights:</p>
-<p>Peak Time:</p>
-<ul>
-<li>The N line experiences the highest number of delay cases (over 100,000).</li>
-<li>The G line has the fewest delays (less than half of N train).</li>
-</ul>
-<p>Off-Peak Time: - The 2 train has the most significant delays. - The M train has the least delays.</p>
+<p>The seasonal analysis shows distinct trends. Winter has variability, with a dip in February and recovery in December due to weather. Spring performs best, steadily improving to peak in May. Summer stays stable with a small drop in July and recovery in August.</p>
+<p>Please go to this <a href="https://nikitagtm.github.io/STA9750-2024-FALL/individual_report.html">On-Terminal Performance(2020-2024)</a>for more detailed analysis.</p>
+<p><strong>What is the relationship between ridership and wait times, and does higher ridership correlate with longer wait times?</strong></p>
+<section id="ridership-trend-analysis-by-line" class="level4">
+<h4 class="anchored" data-anchor-id="ridership-trend-analysis-by-line">Ridership Trend Analysis by Line</h4>
+<p>Graph 1: <img src="ridership_plot.png" class="img-fluid" alt="Ridership trend"></p>
+<p>Ridership and wait time data provide insights into system dynamics across lines: High-Ridership Lines: Lines 1, 6, and 4 experience the highest ridership due to their service in densely populated and commercially active areas. Low-Ridership Lines: Shuttle services (e.g., S Rock, S Fkn, S 42nd) show the lowest ridership due to their limited scope. Passenger Distribution: Ridership on high-use lines (e.g., 1, 6) contrasts sharply with mid-tier lines (e.g., Q, R, C), reflecting variations in population density, service frequency, and transit connectivity</p>
+</section>
+<section id="average-wait-time-analysis-by-line" class="level4">
+<h4 class="anchored" data-anchor-id="average-wait-time-analysis-by-line">Average Wait Time Analysis by Line</h4>
+<p>Graph 2: <img src="avg_time_plot.png" class="img-fluid" alt="Average wait time"></p>
+<p>Line Variability: Shuttle lines consistently have the lowest wait times due to their shorter routes, while lines like B, D, M, and R face higher wait times, often due to congestion or complex operations. Trends Over Time: Most lines exhibit stable wait times across pre-COVID, COVID, and post-COVID periods, with notable variability on lines like C and R due to operational changes.</p>
+</section>
+<section id="correlation-analysis" class="level4">
+<h4 class="anchored" data-anchor-id="correlation-analysis">Correlation Analysis</h4>
+<p>Graph3: <img src="correlation_plot.png" class="img-fluid" alt="Correlation"></p>
+<p>Higher ridership shows a weak positive correlation with wait times, but service frequency and efficiency significantly influence outcomes. Effective strategies on shuttle and high-ridership lines highlight potential for managing demand. These insights support improving subway safety, performance, and reliability by addressing congestion and enhancing operations on busy routes.</p>
+<p><a href="https://timbila614.github.io/STA9750-2024-FALL/Individual_report.html">TimbilaNikiema</a></p>
+</section>
+</section>
+</section>
+<section id="relation-to-prior-work" class="level2">
+<h2 class="anchored" data-anchor-id="relation-to-prior-work">Relation to Prior Work</h2>
+<p>The MTA’s annual performance metrics reports play a crucial role in evaluating the effectiveness of its public transportation services. By using benchmarking techniques, the MTA compares its performance against peer agencies, which helps identify best practices that can be implemented to improve operational efficiency and cost-effectiveness. These performance metrics are made publicly available to ensure transparency and are submitted to oversight agencies such as the FTA, while also being included in the National Transit Database.</p>
+<p>Our group’s work builds directly on this foundation by analyzing incident categories and trends, which aligns with the MTA’s commitment to using data for continuous service improvement. Our focus on incident trends, particularly post-COVID, offers more detailed insights that complement the broader performance metrics reported in the MTA’s annual reports. By focusing on the shifts in incidents during and after the pandemic, we shed light on the evolving operational challenges the MTA faces. Our analysis not only contributes to understanding the impact of these trends but also provides valuable context to help guide future decision-making within the organization.</p>
+</section>
+<section id="potential-next-steps" class="level2">
+<h2 class="anchored" data-anchor-id="potential-next-steps">Potential Next Steps</h2>
+<section id="pre-pandemic-trends-and-long-term-patterns" class="level3">
+<h3 class="anchored" data-anchor-id="pre-pandemic-trends-and-long-term-patterns">Pre-Pandemic Trends and Long-Term Patterns</h3>
+<p>Analyzing subway performance prior to the pandemic is vital for establishing a benchmark for comparison. Historical data can reveal long-term performance trends, pinpointing recurring issues with specific lines or infrastructure challenges that existed before COVID-19. Expanding the time frame back to the early 21st century will provide a clearer picture. This analysis helps differentiate between issues caused by the pandemic and those that have persisted over time.</p>
+</section>
+<section id="variations-across-subway-lines-and-boroughs" class="level3">
+<h3 class="anchored" data-anchor-id="variations-across-subway-lines-and-boroughs">Variations Across Subway Lines and Boroughs</h3>
+<p>Further research should explore performance differences across subway lines and boroughs. Factors like infrastructure quality, line age, and service frequency affect service consistency. Older subway lines or those with outdated infrastructure tend to experience more maintenance issues and delays. Identifying these disparities allows for targeted solutions, such as infrastructure upgrades, more frequent service on high-demand routes, or new trains for aging lines.</p>
 
 
 </section>
