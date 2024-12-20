@@ -79,7 +79,7 @@ The analysis focuses on the persons on trackbed/police/medical category from inc
 
 For numbered subway lines, the bar chart shows that while the average annual number of safety incidents is decreased for the 6 and 4 train, it is increased on all other lines, so the overall trends from covid to post-covid time periods increase by 13.61%. The 6 train has the highest average incidents during both periods but decreased to 9.3 in post-COVID. The 5 train and 7 train have increase the most of almost any numbered subway line.
 
-![Lettered Subway Lines](group_project/lettered_line.png)
+![Lettered Subway Lines](lettered_line.png)
 
 For lettered subway lines, the numbers of annual average safety incidents of almost all subway increase, except the R and D train, with increase by 34%. The A, E, F, and N trains exhibit a significant increase from an average of 4 incidents during COVID to 7.3 incidents post-COVID, which increase the most across all lines.
 
