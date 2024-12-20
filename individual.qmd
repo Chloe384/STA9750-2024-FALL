@@ -25,19 +25,24 @@ library(knitr)
 library(gganimate)
 library(dplyr)
 library(ggplot2)
+library(httr)
 
 
 MTA_train_delays <- read_csv("C:\\Users\\zhuol\\OneDrive\\Documents\\STA9750-2024-FALL\\MTA_Subway_Trains_Delayed__Beginning_2020_20241024.csv")
 
+# Show the first 15 rows using kable
+MTA_train_delays %>%
+  head(15) %>%
+  kable()
 ```
 
-### Preprocessing Details 
+### Preprocessing Details
 
-1. **Period Classification:** We classified the day type into peak and off-peak periods based on weekdays (1 for peak, 2 for off-peak). 
+1.  **Period Classification:** We classified the day type into peak and off-peak periods based on weekdays (1 for peak, 2 for off-peak).
 
-2. **Filtering:** The data was filtered to remove "Systemwide" entries, as they were not specific to individual lines, and only relevant lines were included. 
+2.  **Filtering:** The data was filtered to remove "Systemwide" entries, as they were not specific to individual lines, and only relevant lines were included.
 
-3. **Year Extraction:** The year was extracted from the "month" column to separate the data into two major periods: COVID and Post-COVID.
+3.  **Year Extraction:** The year was extracted from the "month" column to separate the data into two major periods: COVID and Post-COVID.
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
@@ -50,6 +55,11 @@ MTA_train_delays$month <- as.Date(MTA_train_delays$month)
 performance <- MTA_train_delays %>%
   group_by(line) %>%
   summarise(total_delays = sum(delays, na.rm = TRUE), .groups = 'drop')
+
+# Show the first 15 rows using kable
+MTA_train_delays %>%
+  head(15) %>%
+  kable()
 ```
 
 ## Peak vs. Off-Peak Delays Analysis
@@ -60,7 +70,6 @@ We computed the total delays for each subway line during both peak and off-peak 
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
-# Exclude specific lines (S Fkln, S 42nd, S Rock) from the dataset
 MTA_train_delays <- MTA_train_delays %>%
   filter(!line %in% c("S Fkln", "S 42nd", "S Rock", "JZ")) %>%
   mutate(period = ifelse(day_type == 1, "Peak", "Off-Peak"),
@@ -144,23 +153,21 @@ kable(combined_performance,
 
 **Peak Time Delays:**
 
-- The N train recorded the highest number of delays, exceeding 100,000 delays during peak hours. This suggests that the N line faces significant operational challenges during rush hours, likely due to high ridership and congestion. 
+-   The N train recorded the highest number of delays, exceeding 100,000 delays during peak hours. This suggests that the N line faces significant operational challenges during rush hours, likely due to high ridership and congestion.
 
-- On the other hand, the G line experienced far fewer delays, reporting less than half the number of delays compared to the N line, highlighting its relatively smooth operation during peak times. 
+-   On the other hand, the G line experienced far fewer delays, reporting less than half the number of delays compared to the N line, highlighting its relatively smooth operation during peak times.
 
 **Off-Peak Time Delays:**
 
-- During off-peak times, the 2 train recorded the most significant delays. This may indicate underlying operational issues, such as staffing shortages, equipment failures, or external factors. 
+-   During off-peak times, the 2 train recorded the most significant delays. This may indicate underlying operational issues, such as staffing shortages, equipment failures, or external factors.
 
-- In contrast, the M train had the least amount of delays during off-peak hours, suggesting better operational efficiency during non-peak times.
+-   In contrast, the M train had the least amount of delays during off-peak hours, suggesting better operational efficiency during non-peak times.
 
 ## Trend of Subway Delays
 
 To better understand the impact of the COVID-19 pandemic on subway performance, we compared the total delays across subway lines between the COVID period (2020-2021) and the Post-COVID period (2022-2024). By visualizing the trends, we can assess whether delays increased, decreased, or remained stable following the easing of pandemic restrictions and the return to normal ridership levels.
 
-
 We used an animated bar chart to display the total delays for each subway line during the COVID and Post-COVID periods. This provided a dynamic comparison that allows us to observe trends and fluctuations in delays over time.
-
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
@@ -180,9 +187,12 @@ combined_summary <- delay_summary %>%
   group_by(period, line) %>%
   summarise(total_delays = sum(total_delays), .groups = 'drop')
 
-# Create the animated bar chart
+# Create the animated bar chart with labels on the bars
 animated_plot <- ggplot(combined_summary, aes(x = line, y = total_delays, fill = period)) +
   geom_bar(stat = "identity", position = "dodge") +
+  geom_text(aes(label = total_delays), 
+            position = position_dodge(width = 0.9), 
+            vjust = -0.5, size = 3) +  # Adjust the size, position, and vertical alignment of the text
   labs(title = "Total Delays by Subway Line (COVID vs. Post-COVID)",
        x = "Subway Line",
        y = "Total Delays",
@@ -202,19 +212,13 @@ anim_save(output_gif_path, animated_plot, renderer = gifski_renderer())
 
 The Trend of Subway Delays analysis, which compares delay trends during the COVID (2020-2021) and Post-COVID periods, reveals substantial changes in the performance of various subway lines. The animated bar chart provides a visual comparison of the total delays for each subway line across these two periods. As the animation illustrates, there is an overall increase in delays for most subway lines, especially as New York City began to reopen, with certain lines, such as the N, F, 6, and A, experiencing significant increases in delays—nearly doubling in some cases. This suggests that although delays were reduced during the shutdown, the return to full service and increased ridership in the post-pandemic era has contributed to a rise in disruptions.
 
-
 ### Percent Change in Delays
 
 The accompanying percent change graph offers deeper insights into the magnitude of these delays over time, providing the percentage increase in delays for each line compared to pre-pandemic levels. Among the findings, the G train showed the smallest percentage increase, with a relatively modest rise of approximately 20%. This indicates that the G line's performance remained more consistent, experiencing fewer disruptions relative to other lines.
 
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
-library(dplyr)
-library(ggplot2)
-library(lubridate)
-library(tidyr)  # For pivot_wider
-
-# Ensure month is in date format
+# Your existing data processing code
 MTA_train_delays$month <- as.Date(MTA_train_delays$month)
 
 # Extract year and summarize total delays by year and line, excluding 'Systemwide'
@@ -233,17 +237,32 @@ change_summary <- delay_summary %>%
   mutate(percent_change = (`Post-COVID` - `COVID`) / `COVID` * 100) %>%
   select(line, percent_change)
 
-# Create a line graph
-ggplot(change_summary, aes(x = line, y = percent_change, group = 1)) +
+# Create an index for animation purposes
+change_summary <- change_summary %>%
+  mutate(index = row_number())
+
+# Animate the plot: Moving dots along the line graph
+animated_plot <- ggplot(change_summary, aes(x = line, y = percent_change, group = 1)) +
   geom_line() +
   geom_point() +
   labs(title = "Percent Change in Delays: COVID vs. Post-COVID",
        x = "Subway Line",
        y = "Percent Change in Delays (%)") +
   theme_minimal() +
-  scale_y_continuous(labels = scales::percent_format(scale = 1))  # Format y-axis as percentage
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +  # Format y-axis as percentage
+  transition_reveal(along = index) +  # Animate the points using the index
+  enter_fade() + exit_fade()  # Fade in and out for smoothness
+
+# Render the animation
+animation <- animate(animated_plot, nframes = 100, duration = 20, rewind = TRUE)
+
+# Save the animation as a .gif
+anim_save("MTA_train_delays_animation.gif", animation)
 
 ```
+
+![MTA Percent Change Animation](MTA_train_delays_animation.gif)
+
 
 ## Reporting Categories of Subway Delays
 
@@ -308,6 +327,7 @@ Finally, we examined how delays varied between peak and off-peak hours on a mont
 ### Monthly Delay Trends
 
 An animated line plot was created to show how total delays changed month by month for both peak and off-peak periods. The plot revealed several trends, including a significant drop in delays during the early months of 2020, followed by a surge in delays as the city reopened and ridership increased.
+
 ```{r, message = FALSE, warning = FALSE}
 #| code-fold: true
 
@@ -344,7 +364,7 @@ anim_save(output_gif_path, animated_plot, renderer = gifski_renderer())
 
 ![MTA Train Delays Line Graph](total_delays_animation.gif)
 
-Key Findings:
+**Key Findings:**
 
 -   First quarter of 2020 saw a significant drop in delays due to the NYC shutdown in response to the COVID-19 pandemic.
 
